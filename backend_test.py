@@ -525,7 +525,7 @@ class CEPWebAPITester:
             # Validate agent structure
             if len(response) > 0:
                 agent = response[0]
-                required_fields = ["id", "name", "description", "created_at"]
+                required_fields = ["id", "name", "description", "created_at", "avatar", "color"]
                 missing_fields = [field for field in required_fields if field not in agent]
                 
                 if missing_fields:
@@ -536,6 +536,33 @@ class CEPWebAPITester:
                 self.agent_ids = [agent["id"] for agent in response]
                 
                 print("✅ Agent structure validation passed")
+            return True
+        return False
+        
+    def test_get_agents_with_stats(self):
+        """Test getting agents with statistics"""
+        print("\n=== Testing Agents with Statistics ===")
+        success, response = self.run_test(
+            "Get Agents with Stats",
+            "GET",
+            "agents/stats",
+            200
+        )
+        
+        if success and isinstance(response, list):
+            print(f"Retrieved {len(response)} agents with stats")
+            
+            # Validate agent stats structure
+            if len(response) > 0:
+                agent_stats = response[0]
+                required_fields = ["id", "name", "description", "created_at", "avatar", "color", "thought_count", "last_activity"]
+                missing_fields = [field for field in required_fields if field not in agent_stats]
+                
+                if missing_fields:
+                    print(f"❌ Agent stats missing required fields: {missing_fields}")
+                    return False
+                
+                print("✅ Agent stats structure validation passed")
             return True
         return False
         
