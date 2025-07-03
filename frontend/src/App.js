@@ -1823,7 +1823,7 @@ function App() {
       {/* Persistent Help Button */}
       <button
         onClick={() => setShowTutorial(true)}
-        className="fixed bottom-6 right-6 w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 z-40"
+        className="fixed bottom-6 right-6 w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 z-[9999]"
         title="Show Tutorial"
       >
         <span className="text-xl">❓</span>
