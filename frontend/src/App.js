@@ -445,7 +445,7 @@ function App() {
     }
   }, []);
 
-  // Convert T-units to graph with tree layout
+  // Convert T-units to graph with top-down tree layout
   const convertTUnitsToGraph = useCallback((tUnits, preservePositions = false, currentNodes = []) => {
     // Build tree structure
     const nodeMap = new Map();
@@ -467,9 +467,9 @@ function App() {
     tUnits.forEach(tUnit => {
       const node = nodeMap.get(tUnit.id);
       
-      if (tUnit.parents.length === 0) {
+      if (tUnit.parents && tUnit.parents.length === 0) {
         rootNodes.push(node);
-      } else {
+      } else if (tUnit.parents && tUnit.parents.length > 0) {
         // Add to parent's children
         tUnit.parents.forEach(parentId => {
           const parent = nodeMap.get(parentId);
@@ -477,10 +477,13 @@ function App() {
             parent.children.push(node);
           }
         });
+      } else {
+        // If no parents array or undefined, treat as root
+        rootNodes.push(node);
       }
     });
     
-    // Calculate levels (depth from root)
+    // Calculate levels (depth from root) - cascading DOWN
     const calculateLevels = (node, level = 0) => {
       node.level = level;
       node.children.forEach(child => {
@@ -490,7 +493,7 @@ function App() {
     
     rootNodes.forEach(root => calculateLevels(root));
     
-    // Group nodes by level
+    // Group nodes by level for top-down layout
     const levels = new Map();
     Array.from(nodeMap.values()).forEach(node => {
       if (!levels.has(node.level)) {
@@ -499,26 +502,27 @@ function App() {
       levels.get(node.level).push(node);
     });
     
-    // Calculate positions for tree layout (only for nodes without manual positions)
-    const levelHeight = 200;  // Vertical spacing between levels
-    const nodeWidth = 300;    // Horizontal spacing between nodes
-    const startY = 50;        // Top margin
+    // Calculate positions for top-down tree layout
+    const levelHeight = 250;  // Increased vertical spacing between levels  
+    const nodeSpacing = 280;  // Horizontal spacing between nodes
+    const topMargin = 100;    // Top margin for initial thoughts
     
-    // Position nodes level by level
+    // Position nodes level by level, cascading DOWN from top
     levels.forEach((nodesInLevel, level) => {
-      const y = startY + (level * levelHeight);
-      const totalWidth = nodesInLevel.length * nodeWidth;
-      const startX = -totalWidth / 2;  // Center the level
+      const y = topMargin + (level * levelHeight);  // Each level goes further DOWN
+      const totalWidth = nodesInLevel.length * nodeSpacing;
+      const startX = -totalWidth / 2;  // Center each level horizontally
       
       nodesInLevel.forEach((node, index) => {
         // Only update position if node doesn't have a manual position
         if (!node.hasManualPosition) {
           node.position = {
-            x: startX + (index * nodeWidth) + (nodeWidth / 2),
-            y: y
+            x: startX + (index * nodeSpacing) + (nodeSpacing / 2),
+            y: y  // Cascading DOWN: Level 0 at top, Level 1 below, etc.
           };
         }
       });
+    });
     });
     
     // Create React Flow nodes
