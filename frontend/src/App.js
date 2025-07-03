@@ -728,6 +728,11 @@ function App() {
                   >
                     <p className="text-sm mb-2">
                       {useAI ? 'AI-powered synthesis' : 'Basic synthesis'} of selected T-units
+                      {recalledNodes.filter(id => selectedNodes.includes(id)).length > 0 && (
+                        <span className="block text-cyan-600 text-xs mt-1">
+                          💭 {recalledNodes.filter(id => selectedNodes.includes(id)).length} memory{recalledNodes.filter(id => selectedNodes.includes(id)).length > 1 ? 'ies' : 'y'} will influence this synthesis
+                        </span>
+                      )}
                     </p>
                     <button
                       onClick={handleSynthesis}
