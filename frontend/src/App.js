@@ -67,8 +67,15 @@ const TUnitNode = ({ data }) => {
           </div>
         )}
         
+        {/* Received Exchange Tab */}
+        {data.content && data.content.startsWith('[RECEIVED]') && (
+          <div className="bg-orange-500 text-white text-xs px-2 py-1 rounded-t-md ml-auto">
+            RECEIVED
+          </div>
+        )}
+        
         {/* Fill remaining space if no tabs */}
-        {!data.agent_id && !data.ai_generated && !data.phase && (
+        {!data.agent_id && !data.ai_generated && !data.phase && !data.content?.startsWith('[RECEIVED]') && (
           <div className="flex-1 bg-gray-100 text-xs px-2 py-1">
             T-Unit
           </div>
