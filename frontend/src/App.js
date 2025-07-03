@@ -388,15 +388,18 @@ function App() {
 
     setIsLoading(true);
     try {
-      await axios.post(`${API}/exchange`, {
-        t_unit_id: selectedNodes[0],
+      const selectedTUnit = tUnits.find(t => t.id === selectedNodes[0]);
+      await axios.post(`${API}/multi-agent/exchange`, {
+        source_agent_id: selectedTUnit.agent_id,
         target_agent_id: selectedAgent,
-        use_ai: useAI
+        t_unit_id: selectedNodes[0],
+        exchange_type: "user_initiated"
       });
       await Promise.all([fetchTUnits(), fetchEvents(), fetchAnalytics()]);
       setSelectedNodes([]);
       setShowMultiAgent(false);
       setSelectedAgent('');
+      alert('Thought successfully sent to agent!');
     } catch (error) {
       console.error('Error during multi-agent exchange:', error);
       alert('Error during multi-agent exchange');
