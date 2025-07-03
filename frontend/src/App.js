@@ -1567,26 +1567,8 @@ function App() {
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col">
-          {/* Main Canvas */}
-          <div className="flex-1 relative">
-            {activeTab === 'graph' && (
-              <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={handleNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
-                onNodeClick={onNodeClick}
-                nodeTypes={nodeTypes}
-                fitView
-                className="bg-gray-50"
-              >
-                <Background />
-                <Controls />
-                <MiniMap />
-              </ReactFlow>
-            )}
-            {activeTab === 'analytics' && (
+        </div>
+      </div>
               <div className="p-4 space-y-4">
                 <h2 className="text-xl font-bold">Analytics</h2>
                 <div className="grid grid-cols-2 gap-4">
