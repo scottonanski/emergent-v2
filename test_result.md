@@ -204,9 +204,41 @@
         - working: false
           agent: "main"
           comment: "Starting implementation of advanced manual thought input with valence sliders for curiosity, certainty, and dissonance"
-        - working: true
+  - task: "Phase 2: Tutorial/Onboarding Overlay"
+    implemented: false
+    working: false
+    file: "frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
           agent: "main"
-          comment: "COMPLETED: Added comprehensive Create Thought modal with content textarea, agent selection dropdown, and color-coded valence sliders (curiosity=green, certainty=blue, dissonance=red). Includes custom CSS for slider styling, default values (0.6, 0.4, 0.2), and proper form validation."
+          comment: "Starting implementation of tutorial overlay with localStorage flag and 3-step walkthrough modal"
+
+  - task: "Phase 2: AI Thinking Animation"
+    implemented: false
+    working: false
+    file: "frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "Starting implementation of floating thinking bubble and glowing animations during AI operations"
+
+  - task: "Phase 2: Smart Camera Focus"
+    implemented: false
+    working: false
+    file: "frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "Starting implementation of auto-pan and zoom to newly created thoughts using React Flow camera controls"
 
 ## metadata:
   created_by: "main_agent"
