@@ -696,30 +696,44 @@ function App() {
   // Handle synthesis
   const handleSynthesis = async () => {
     if (selectedNodes.length < 2) {
-      alert('Please select at least 2 T-units for synthesis');
+      setErrorMessage('Please select at least 2 T-units for synthesis');
+      setShowErrorMessage(true);
       return;
     }
 
     setIsLoading(true);
+    startThinking('AI is synthesizing thoughts...');
+    
     try {
       // Separate recalled nodes from regular selection
       const recalledInSelection = selectedNodes.filter(id => recalledNodes.includes(id));
       const regularSelection = selectedNodes.filter(id => !recalledNodes.includes(id));
       
-      await axios.post(`${API}/synthesize`, {
+      const response = await axios.post(`${API}/synthesize`, {
         t_unit_ids: regularSelection.length >= 2 ? regularSelection : selectedNodes,
         recalled_ids: recalledInSelection,
         use_ai: useAI
       });
+      
+      const newNodeId = response.data.id;
+      
       await Promise.all([fetchTUnits(), fetchEvents(), fetchAnalytics()]);
+      
+      // Focus camera on new node after a brief delay
+      if (newNodeId) {
+        setTimeout(() => focusOnNode(newNodeId), 200);
+      }
+      
       setSelectedNodes([]);
       setRecalledNodes([]);
       setShowSynthesis(false);
     } catch (error) {
       console.error('Error during synthesis:', error);
-      alert('Error during synthesis');
+      setErrorMessage('Error during synthesis. Please try again.');
+      setShowErrorMessage(true);
     } finally {
       setIsLoading(false);
+      stopThinking();
     }
   };
 
