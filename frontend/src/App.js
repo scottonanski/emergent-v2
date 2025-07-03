@@ -387,6 +387,28 @@ function App() {
   };
 
   // Handle multi-agent exchange
+  // Handle agent creation
+  const handleCreateAgent = async () => {
+    if (!newAgentName.trim()) return;
+    
+    setIsLoading(true);
+    try {
+      await axios.post(`${API}/agents`, {
+        name: newAgentName,
+        description: newAgentDescription
+      });
+      await fetchAgents();
+      setShowAgentCreation(false);
+      setNewAgentName('');
+      setNewAgentDescription('');
+    } catch (error) {
+      console.error('Error creating agent:', error);
+      alert('Error creating agent');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleMultiAgentExchange = async () => {
     if (selectedNodes.length !== 1) {
       alert('Please select exactly 1 T-unit for exchange');
