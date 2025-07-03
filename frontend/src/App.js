@@ -450,22 +450,20 @@ function App() {
 
     // Create edges with better routing for tree layout
     const graphEdges = [];
-    tUnits.forEach(tUnit => {
-      tUnit.children.forEach(childId => {
-        if (tUnits.find(t => t.id === childId)) {
-          graphEdges.push({
-            id: `${tUnit.id}-${childId}`,
-            source: tUnit.id,
-            target: childId,
-            label: tUnit.linkage,
-            type: 'smoothstep',  // Better edge routing for trees
-            style: {
-              stroke: '#6b7280',
-              strokeWidth: 2,
-            },
-            animated: true
-          });
-        }
+    Array.from(nodeMap.values()).forEach(node => {
+      node.children.forEach(child => {
+        graphEdges.push({
+          id: `${node.id}-${child.id}`,
+          source: node.id,
+          target: child.id,
+          label: node.linkage,
+          type: 'smoothstep',  // Better edge routing for trees
+          style: {
+            stroke: '#6b7280',
+            strokeWidth: 2,
+          },
+          animated: true
+        });
       });
     });
 
