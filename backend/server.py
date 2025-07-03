@@ -661,6 +661,62 @@ async def get_agents():
     agents = await db.agents.find().to_list(1000)
     return [AgentInfo(**agent) for agent in agents]
 
+@api_router.get("/agents/stats")
+async def get_agents_with_stats():
+    """Get all agents with statistics"""
+    agents = await db.agents.find().to_list(1000)
+    
+    # Get stats for each agent
+    agents_with_stats = []
+    for agent_doc in agents:
+        agent = AgentInfo(**agent_doc)
+        
+        # Count thoughts created by this agent
+        thought_count = await db.t_units.count_documents({"agent_id": agent.id})
+        
+        # Get last activity (most recent T-unit)
+        last_t_unit = await db.t_units.find({"agent_id": agent.id}).sort("timestamp", -1).limit(1).to_list(1)
+        last_activity = last_t_unit[0]["timestamp"] if last_t_unit else agent.created_at
+        
+        agent_stats = {
+            **agent.dict(),
+            "thought_count": thought_count,
+            "last_activity": last_activity
+        }
+        agents_with_stats.append(agent_stats)
+    
+    return agents_with_stats
+
+@api_router.put("/agents/{agent_id}")
+async def update_agent(agent_id: str, agent_update: dict):
+    """Update an agent (for rename, avatar, color changes)"""
+    result = await db.agents.update_one(
+        {"id": agent_id},
+        {"$set": agent_update}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Agent not found")
+    
+    updated_agent = await db.agents.find_one({"id": agent_id})
+    return AgentInfo(**updated_agent)
+
+@api_router.delete("/agents/{agent_id}")
+async def delete_agent(agent_id: str):
+    """Delete an agent"""
+    # Check if agent has any T-units
+    t_unit_count = await db.t_units.count_documents({"agent_id": agent_id})
+    if t_unit_count > 0:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Cannot delete agent: has {t_unit_count} associated thoughts. Delete thoughts first or reassign them."
+        )
+    
+    result = await db.agents.delete_one({"id": agent_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Agent not found")
+    
+    return {"message": "Agent deleted successfully"}
+
 @api_router.post("/agents", response_model=AgentInfo)
 async def create_agent(agent: AgentInfo):
     """Create a new agent"""
