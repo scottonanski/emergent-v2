@@ -307,15 +307,18 @@ function App() {
   // React Flow instance ref for camera control
   const reactFlowInstance = useRef(null);
 
-  // Smart camera focus on new nodes
+  // Smart camera focus on new nodes  
   const focusOnNode = useCallback((nodeId) => {
-    if (!reactFlowInstance.current || !nodeId) return;
+    if (!nodeId) return;
     
-    const node = nodes.find(n => n.id === nodeId);
-    if (node) {
-      // Center camera on the new node with smooth animation
-      reactFlowInstance.current.setCenter(node.position.x, node.position.y, { zoom: 1.2, duration: 800 });
-    }
+    // Use setTimeout to ensure node has been added to DOM
+    setTimeout(() => {
+      const node = nodes.find(n => n.id === nodeId);
+      if (node && reactFlowInstance.current) {
+        // Center camera on the new node with smooth animation
+        reactFlowInstance.current.setCenter(node.position.x, node.position.y, { zoom: 1.2, duration: 800 });
+      }
+    }, 100);
   }, [nodes]);
 
   // AI Thinking animation helpers
