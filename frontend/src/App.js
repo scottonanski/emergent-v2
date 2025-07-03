@@ -47,7 +47,7 @@ const TUnitNode = ({ data }) => {
       
       {/* AI Generated Badge */}
       {data.ai_generated && (
-        <div className="absolute top-1 right-1 bg-purple-500 text-white text-xs px-1 py-0.5 rounded">
+        <div className="absolute -top-2 -right-2 bg-purple-500 text-white text-xs px-1 py-0.5 rounded shadow-md z-10">
           AI
         </div>
       )}
