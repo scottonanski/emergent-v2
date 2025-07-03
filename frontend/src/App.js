@@ -505,7 +505,7 @@ function App() {
 
     setNodes(graphNodes);
     setEdges(graphEdges);
-  }, [selectedNodes, recalledNodes, setNodes, setEdges, nodes]);
+  }, [selectedNodes, recalledNodes, setNodes, setEdges]);
 
   // Initialize sample data
   const initSampleData = async () => {
