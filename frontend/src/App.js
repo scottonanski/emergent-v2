@@ -785,8 +785,27 @@ function App() {
 
   // Initialize on component mount
   useEffect(() => {
-    Promise.all([fetchTUnits(), fetchEvents(), fetchAgents(), fetchAnalytics()]);
-  }, [fetchTUnits, fetchEvents, fetchAgents, fetchAnalytics]);
+    const initializeApp = async () => {
+      // Always fetch existing data
+      await Promise.all([fetchTUnits(), fetchEvents(), fetchAgents(), fetchAnalytics()]);
+      
+      // Auto-generate sample data only if enabled and no data exists
+      if (autoGenerateOnLoad) {
+        // Check if we have any T-units
+        try {
+          const response = await axios.get(`${API}/t-units`);
+          if (response.data.length === 0) {
+            // No data exists, initialize sample data
+            await initSampleData();
+          }
+        } catch (error) {
+          console.error('Error checking existing data:', error);
+        }
+      }
+    };
+    
+    initializeApp();
+  }, [fetchTUnits, fetchEvents, fetchAgents, fetchAnalytics, autoGenerateOnLoad]);
 
   // Update graph when T-units change
   useEffect(() => {
