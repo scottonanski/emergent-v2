@@ -1,43 +1,73 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ReactFlow, useNodesState, useEdgesState, addEdge, Background, Controls, MiniMap, Handle, Position } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import axios from 'axios';
+import * as d3 from 'd3';
+import { motion, AnimatePresence } from 'framer-motion';
+import { RadialBarChart, RadialBar, PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import './App.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Custom T-unit Node Component
+// Enhanced T-unit Node Component
 const TUnitNode = ({ data }) => {
   const getNodeColor = (valence) => {
-    // Determine dominant valence for coloring
     const { curiosity, certainty, dissonance } = valence;
     
-    if (dissonance > 0.6) return '#ff8b94'; // High dissonance - red
-    if (curiosity > 0.6) return '#a8e6cf'; // High curiosity - green
-    if (certainty > 0.6) return '#dcedc1'; // High certainty - light green
-    return '#ffd3a5'; // Default - orange
+    if (dissonance > 0.6) return '#ff6b6b'; // High dissonance - red
+    if (curiosity > 0.6) return '#51cf66'; // High curiosity - green
+    if (certainty > 0.6) return '#94d82d'; // High certainty - light green
+    return '#ffd43b'; // Default - yellow
+  };
+
+  const getNodeBorderColor = (data) => {
+    if (data.ai_generated) return '#845ef7'; // Purple border for AI-generated
+    if (data.phase) return '#339af0'; // Blue border for transformation phases
+    return '#868e96'; // Default gray
   };
 
   const getValenceIntensity = (valence) => {
-    const max = Math.max(valence.curiosity, valence.certainty, valence.dissonance);
-    return max;
+    return Math.max(valence.curiosity, valence.certainty, valence.dissonance);
   };
 
   return (
-    <div 
-      className="px-4 py-2 shadow-lg rounded-lg border-2 border-gray-400 bg-white max-w-xs"
+    <motion.div
+      initial={{ scale: 0.8, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="px-4 py-2 shadow-lg rounded-lg border-2 bg-white max-w-xs relative overflow-hidden"
       style={{ 
         backgroundColor: getNodeColor(data.valence),
-        opacity: 0.7 + (getValenceIntensity(data.valence) * 0.3)
+        borderColor: getNodeBorderColor(data),
+        opacity: 0.85 + (getValenceIntensity(data.valence) * 0.15)
       }}
     >
       <Handle type="target" position={Position.Top} />
-      <div className="font-bold text-sm mb-1">{data.phase || 'T-Unit'}</div>
-      <div className="text-xs text-gray-800 mb-2 max-h-12 overflow-hidden">
-        {data.content.substring(0, 50)}...
+      
+      {/* AI Generated Badge */}
+      {data.ai_generated && (
+        <div className="absolute top-1 right-1 bg-purple-500 text-white text-xs px-1 py-0.5 rounded">
+          AI
+        </div>
+      )}
+      
+      {/* Agent Badge */}
+      {data.agent_id && data.agent_id !== 'default' && (
+        <div className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-1 py-0.5 rounded">
+          {data.agent_id.split('_')[1]?.toUpperCase() || 'A'}
+        </div>
+      )}
+      
+      <div className="font-bold text-sm mb-1 text-gray-800">
+        {data.phase || 'T-Unit'}
       </div>
-      <div className="text-xs grid grid-cols-3 gap-1">
+      
+      <div className="text-xs text-gray-700 mb-2 max-h-12 overflow-hidden leading-tight">
+        {data.content.substring(0, 60)}...
+      </div>
+      
+      <div className="text-xs grid grid-cols-3 gap-1 text-gray-800">
         <div className="text-center">
           <div className="font-semibold">C</div>
           <div>{data.valence.curiosity.toFixed(1)}</div>
@@ -51,24 +81,126 @@ const TUnitNode = ({ data }) => {
           <div>{data.valence.dissonance.toFixed(1)}</div>
         </div>
       </div>
+      
       <Handle type="source" position={Position.Bottom} />
+    </motion.div>
+  );
+};
+
+// Valence Radar Chart Component
+const ValenceRadarChart = ({ valenceData }) => {
+  const svgRef = useRef();
+  
+  useEffect(() => {
+    if (!valenceData || valenceData.length === 0) return;
+    
+    const svg = d3.select(svgRef.current);
+    svg.selectAll("*").remove();
+    
+    const width = 200;
+    const height = 200;
+    const radius = Math.min(width, height) / 2 - 20;
+    
+    const g = svg.append("g").attr("transform", `translate(${width/2}, ${height/2})`);
+    
+    // Calculate average valence
+    const avgValence = {
+      curiosity: d3.mean(valenceData, d => d.curiosity),
+      certainty: d3.mean(valenceData, d => d.certainty),
+      dissonance: d3.mean(valenceData, d => d.dissonance)
+    };
+    
+    const data = [
+      { axis: "Curiosity", value: avgValence.curiosity, color: "#51cf66" },
+      { axis: "Certainty", value: avgValence.certainty, color: "#94d82d" },
+      { axis: "Dissonance", value: avgValence.dissonance, color: "#ff6b6b" }
+    ];
+    
+    const angleSlice = Math.PI * 2 / data.length;
+    const rScale = d3.scaleLinear().domain([0, 1]).range([0, radius]);
+    
+    // Draw grid circles
+    for (let i = 1; i <= 5; i++) {
+      g.append("circle")
+        .attr("r", (radius / 5) * i)
+        .attr("fill", "none")
+        .attr("stroke", "#e9ecef")
+        .attr("stroke-width", 1);
+    }
+    
+    // Draw axis lines
+    data.forEach((d, i) => {
+      g.append("line")
+        .attr("x1", 0)
+        .attr("y1", 0)
+        .attr("x2", radius * Math.cos(angleSlice * i - Math.PI / 2))
+        .attr("y2", radius * Math.sin(angleSlice * i - Math.PI / 2))
+        .attr("stroke", "#adb5bd")
+        .attr("stroke-width", 1);
+      
+      // Add labels
+      g.append("text")
+        .attr("x", (radius + 10) * Math.cos(angleSlice * i - Math.PI / 2))
+        .attr("y", (radius + 10) * Math.sin(angleSlice * i - Math.PI / 2))
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "middle")
+        .style("font-size", "12px")
+        .style("fill", d.color)
+        .text(d.axis);
+    });
+    
+    // Draw valence polygon
+    const line = d3.line()
+      .x((d, i) => rScale(d.value) * Math.cos(angleSlice * i - Math.PI / 2))
+      .y((d, i) => rScale(d.value) * Math.sin(angleSlice * i - Math.PI / 2))
+      .curve(d3.curveLinearClosed);
+    
+    g.append("path")
+      .datum(data)
+      .attr("d", line)
+      .attr("fill", "rgba(81, 207, 102, 0.3)")
+      .attr("stroke", "#51cf66")
+      .attr("stroke-width", 2);
+    
+    // Add dots
+    data.forEach((d, i) => {
+      g.append("circle")
+        .attr("cx", rScale(d.value) * Math.cos(angleSlice * i - Math.PI / 2))
+        .attr("cy", rScale(d.value) * Math.sin(angleSlice * i - Math.PI / 2))
+        .attr("r", 4)
+        .attr("fill", d.color);
+    });
+    
+  }, [valenceData]);
+  
+  return <svg ref={svgRef} width={200} height={200}></svg>;
+};
+
+// Timeline Component
+const CognitiveTimeline = ({ events }) => {
+  const timelineData = events.slice(-20).map(event => ({
+    timestamp: new Date(event.timestamp).toLocaleTimeString(),
+    type: event.type,
+    agent: event.agent_id || 'default',
+    count: 1
+  }));
+  
+  return (
+    <div className="h-40 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={timelineData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="timestamp" fontSize={10} />
+          <YAxis fontSize={10} />
+          <Tooltip />
+          <Line type="monotone" dataKey="count" stroke="#8884d8" strokeWidth={2} />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 };
 
-// Custom edge styles
-const edgeOptions = {
-  animated: true,
-  style: {
-    stroke: '#1f2937',
-    strokeWidth: 2,
-  },
-};
-
-const nodeTypes = {
-  tunit: TUnitNode,
-};
-
+// Main App Component
 function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -77,10 +209,26 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [showSynthesis, setShowSynthesis] = useState(false);
   const [showTransformation, setShowTransformation] = useState(false);
+  const [showMultiAgent, setShowMultiAgent] = useState(false);
   const [anomalyText, setAnomalyText] = useState('');
   const [events, setEvents] = useState([]);
+  const [agents, setAgents] = useState([]);
+  const [selectedAgent, setSelectedAgent] = useState('');
+  const [valenceData, setValenceData] = useState([]);
+  const [timelineData, setTimelineData] = useState([]);
+  const [activeTab, setActiveTab] = useState('graph');
+  const [useAI, setUseAI] = useState(true);
+  const [showImportExport, setShowImportExport] = useState(false);
 
-  // Fetch T-units from backend
+  // Custom edge styles
+  const edgeOptions = {
+    animated: true,
+    style: { stroke: '#1f2937', strokeWidth: 2 },
+  };
+
+  const nodeTypes = { tunit: TUnitNode };
+
+  // Fetch data functions
   const fetchTUnits = useCallback(async () => {
     try {
       const response = await axios.get(`${API}/t-units`);
@@ -90,7 +238,6 @@ function App() {
     }
   }, []);
 
-  // Fetch events from backend
   const fetchEvents = useCallback(async () => {
     try {
       const response = await axios.get(`${API}/events`);
@@ -100,27 +247,49 @@ function App() {
     }
   }, []);
 
-  // Convert T-units to graph nodes and edges
+  const fetchAgents = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API}/agents`);
+      setAgents(response.data);
+    } catch (error) {
+      console.error('Error fetching agents:', error);
+    }
+  }, []);
+
+  const fetchAnalytics = useCallback(async () => {
+    try {
+      const [valenceResponse, timelineResponse] = await Promise.all([
+        axios.get(`${API}/analytics/valence-distribution`),
+        axios.get(`${API}/analytics/cognitive-timeline`)
+      ]);
+      setValenceData(valenceResponse.data);
+      setTimelineData(timelineResponse.data);
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+    }
+  }, []);
+
+  // Convert T-units to graph
   const convertTUnitsToGraph = useCallback((tUnits) => {
-    // Create nodes
     const graphNodes = tUnits.map((tUnit, index) => ({
       id: tUnit.id,
       type: 'tunit',
       position: { 
-        x: (index % 4) * 300 + Math.random() * 50, 
-        y: Math.floor(index / 4) * 200 + Math.random() * 50 
+        x: (index % 5) * 280 + Math.random() * 40, 
+        y: Math.floor(index / 5) * 180 + Math.random() * 40 
       },
       data: {
         content: tUnit.content,
         valence: tUnit.valence,
         phase: tUnit.phase,
         linkage: tUnit.linkage,
-        timestamp: tUnit.timestamp
+        timestamp: tUnit.timestamp,
+        agent_id: tUnit.agent_id,
+        ai_generated: tUnit.ai_generated
       },
       selected: selectedNodes.includes(tUnit.id)
     }));
 
-    // Create edges from parent-child relationships
     const graphEdges = [];
     tUnits.forEach(tUnit => {
       tUnit.children.forEach(childId => {
@@ -145,8 +314,7 @@ function App() {
     setIsLoading(true);
     try {
       await axios.post(`${API}/init-sample-data`);
-      await fetchTUnits();
-      await fetchEvents();
+      await Promise.all([fetchTUnits(), fetchEvents(), fetchAgents(), fetchAnalytics()]);
     } catch (error) {
       console.error('Error initializing sample data:', error);
     } finally {
@@ -156,29 +324,27 @@ function App() {
 
   // Handle node selection
   const onNodeClick = (event, node) => {
-    setSelectedNodes(prev => {
-      if (prev.includes(node.id)) {
-        return prev.filter(id => id !== node.id);
-      } else {
-        return [...prev, node.id];
-      }
-    });
+    setSelectedNodes(prev => 
+      prev.includes(node.id) 
+        ? prev.filter(id => id !== node.id)
+        : [...prev, node.id]
+    );
   };
 
   // Handle synthesis
   const handleSynthesis = async () => {
-    if (selectedNodes.length < 3) {
-      alert('Please select at least 3 T-units for synthesis');
+    if (selectedNodes.length < 2) {
+      alert('Please select at least 2 T-units for synthesis');
       return;
     }
 
     setIsLoading(true);
     try {
       await axios.post(`${API}/synthesize`, {
-        t_unit_ids: selectedNodes
+        t_unit_ids: selectedNodes,
+        use_ai: useAI
       });
-      await fetchTUnits();
-      await fetchEvents();
+      await Promise.all([fetchTUnits(), fetchEvents(), fetchAnalytics()]);
       setSelectedNodes([]);
       setShowSynthesis(false);
     } catch (error) {
@@ -205,10 +371,10 @@ function App() {
     try {
       await axios.post(`${API}/transform`, {
         t_unit_id: selectedNodes[0],
-        anomaly: anomalyText
+        anomaly: anomalyText,
+        use_ai: useAI
       });
-      await fetchTUnits();
-      await fetchEvents();
+      await Promise.all([fetchTUnits(), fetchEvents(), fetchAnalytics()]);
       setSelectedNodes([]);
       setShowTransformation(false);
       setAnomalyText('');
@@ -220,11 +386,52 @@ function App() {
     }
   };
 
+  // Handle file export
+  const handleExport = async () => {
+    try {
+      const response = await axios.get(`${API}/genesis/export`);
+      const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `genesis_log_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      alert('Error exporting data');
+    }
+  };
+
+  // Handle file import
+  const handleImport = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setIsLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      await axios.post(`${API}/genesis/import`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      await Promise.all([fetchTUnits(), fetchEvents(), fetchAgents(), fetchAnalytics()]);
+      alert('Genesis log imported successfully!');
+    } catch (error) {
+      console.error('Error importing data:', error);
+      alert('Error importing data');
+    } finally {
+      setIsLoading(false);
+      event.target.value = '';
+    }
+  };
+
   // Initialize on component mount
   useEffect(() => {
-    fetchTUnits();
-    fetchEvents();
-  }, [fetchTUnits, fetchEvents]);
+    Promise.all([fetchTUnits(), fetchEvents(), fetchAgents(), fetchAnalytics()]);
+  }, [fetchTUnits, fetchEvents, fetchAgents, fetchAnalytics]);
 
   // Update graph when T-units change
   useEffect(() => {
@@ -234,11 +441,11 @@ function App() {
   const onConnect = useCallback((params) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
 
   return (
-    <div className="h-screen bg-gray-100">
+    <div className="h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <div className="bg-white shadow-sm border-b p-4">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">Cognitive Emergence Protocol</h1>
+          <h1 className="text-2xl font-bold text-gray-800">🧠 Advanced Cognitive Emergence Protocol</h1>
           <div className="flex gap-2">
             <button
               onClick={initSampleData}
@@ -247,25 +454,83 @@ function App() {
             >
               {isLoading ? 'Loading...' : 'Initialize Sample Data'}
             </button>
+            <button
+              onClick={() => setShowImportExport(!showImportExport)}
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+            >
+              Import/Export
+            </button>
           </div>
+        </div>
+        
+        {/* Import/Export Panel */}
+        {showImportExport && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 p-3 bg-gray-50 rounded-lg border"
+          >
+            <div className="flex gap-4 items-center">
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleImport}
+                className="text-sm"
+              />
+              <button
+                onClick={handleExport}
+                className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+              >
+                Export Genesis Log
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="bg-white border-b">
+        <div className="flex space-x-1 p-2">
+          {['graph', 'analytics', 'timeline'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 rounded-lg font-medium ${
+                activeTab === tab 
+                  ? 'bg-blue-500 text-white' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="flex h-full">
+      <div className="flex-1 flex">
         {/* Control Panel */}
-        <div className="w-80 bg-white shadow-lg p-4 overflow-y-auto">
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-3">Control Panel</h2>
-            
+        <div className="w-80 bg-white shadow-lg overflow-y-auto">
+          <div className="p-4 space-y-4">
+            {/* AI Toggle */}
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={useAI}
+                onChange={(e) => setUseAI(e.target.checked)}
+                className="rounded"
+              />
+              <label className="text-sm font-medium">Use AI Enhancement</label>
+            </div>
+
             {/* Selection Info */}
-            <div className="mb-4">
+            <div>
               <h3 className="font-medium mb-2">Selected T-units: {selectedNodes.length}</h3>
               {selectedNodes.length > 0 && (
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 max-h-20 overflow-y-auto">
                   {selectedNodes.map(id => {
                     const tUnit = tUnits.find(t => t.id === id);
                     return tUnit ? (
-                      <div key={id} className="mb-1">
+                      <div key={id} className="mb-1 p-1 bg-gray-50 rounded">
                         {tUnit.content.substring(0, 30)}...
                       </div>
                     ) : null;
@@ -275,114 +540,218 @@ function App() {
             </div>
 
             {/* Synthesis */}
-            <div className="mb-4">
+            <div>
               <button
                 onClick={() => setShowSynthesis(!showSynthesis)}
-                disabled={selectedNodes.length < 3}
+                disabled={selectedNodes.length < 2}
                 className="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
               >
-                Synthesis (3+ T-units)
+                🔄 Synthesis ({selectedNodes.length}/2+ T-units)
               </button>
-              {showSynthesis && (
-                <div className="mt-2 p-3 bg-gray-50 rounded">
-                  <p className="text-sm mb-2">Combine selected T-units into a new emergent T-unit</p>
-                  <button
-                    onClick={handleSynthesis}
-                    disabled={isLoading}
-                    className="w-full px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+              <AnimatePresence>
+                {showSynthesis && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-2 p-3 bg-gray-50 rounded"
                   >
-                    Execute Synthesis
-                  </button>
-                </div>
-              )}
+                    <p className="text-sm mb-2">
+                      {useAI ? 'AI-powered synthesis' : 'Basic synthesis'} of selected T-units
+                    </p>
+                    <button
+                      onClick={handleSynthesis}
+                      disabled={isLoading}
+                      className="w-full px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                    >
+                      Execute Synthesis
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Transformation */}
-            <div className="mb-4">
+            <div>
               <button
                 onClick={() => setShowTransformation(!showTransformation)}
                 disabled={selectedNodes.length !== 1}
                 className="w-full px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 disabled:opacity-50"
               >
-                Transformation (1 T-unit)
+                🔄 Transformation (1 T-unit)
               </button>
-              {showTransformation && (
-                <div className="mt-2 p-3 bg-gray-50 rounded">
-                  <p className="text-sm mb-2">Transform through 5 phases</p>
-                  <input
-                    type="text"
-                    placeholder="Enter anomaly description..."
-                    value={anomalyText}
-                    onChange={(e) => setAnomalyText(e.target.value)}
-                    className="w-full px-2 py-1 border rounded mb-2"
-                  />
-                  <button
-                    onClick={handleTransformation}
-                    disabled={isLoading || !anomalyText.trim()}
-                    className="w-full px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700"
+              <AnimatePresence>
+                {showTransformation && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-2 p-3 bg-gray-50 rounded"
                   >
-                    Execute Transformation
-                  </button>
+                    <p className="text-sm mb-2">
+                      {useAI ? 'AI-powered transformation' : 'Basic transformation'} through 5 phases
+                    </p>
+                    <input
+                      type="text"
+                      placeholder="Enter anomaly description..."
+                      value={anomalyText}
+                      onChange={(e) => setAnomalyText(e.target.value)}
+                      className="w-full px-2 py-1 border rounded mb-2"
+                    />
+                    <button
+                      onClick={handleTransformation}
+                      disabled={isLoading || !anomalyText.trim()}
+                      className="w-full px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700"
+                    >
+                      Execute Transformation
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Legend */}
+            <div>
+              <h3 className="font-medium mb-2">Legend</h3>
+              <div className="space-y-1 text-sm">
+                <div className="flex items-center">
+                  <div className="w-4 h-4 bg-red-400 rounded mr-2"></div>
+                  <span>High Dissonance</span>
                 </div>
-              )}
-            </div>
-          </div>
-
-          {/* Legend */}
-          <div className="mb-6">
-            <h3 className="font-medium mb-2">Valence Legend</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-red-300 rounded mr-2"></div>
-                <span>High Dissonance</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-green-300 rounded mr-2"></div>
-                <span>High Curiosity</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-lime-200 rounded mr-2"></div>
-                <span>High Certainty</span>
-              </div>
-              <div className="text-xs text-gray-600 mt-2">
-                C = Curiosity, Ct = Certainty, D = Dissonance
+                <div className="flex items-center">
+                  <div className="w-4 h-4 bg-green-400 rounded mr-2"></div>
+                  <span>High Curiosity</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-4 h-4 bg-lime-300 rounded mr-2"></div>
+                  <span>High Certainty</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-purple-500 rounded mr-2"></div>
+                  <span>AI Generated</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Recent Events */}
-          <div>
-            <h3 className="font-medium mb-2">Recent Events</h3>
-            <div className="space-y-2 text-sm max-h-40 overflow-y-auto">
-              {events.slice(0, 10).map((event, index) => (
-                <div key={event.id} className="p-2 bg-gray-50 rounded">
-                  <div className="font-medium">{event.type}</div>
-                  <div className="text-xs text-gray-600">
-                    {new Date(event.timestamp).toLocaleTimeString()}
+            {/* Agents */}
+            {agents.length > 0 && (
+              <div>
+                <h3 className="font-medium mb-2">Agents ({agents.length})</h3>
+                <div className="space-y-1 text-sm">
+                  {agents.map(agent => (
+                    <div key={agent.id} className="p-2 bg-gray-50 rounded">
+                      <div className="font-medium">{agent.name}</div>
+                      <div className="text-xs text-gray-600">{agent.description}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recent Events */}
+            <div>
+              <h3 className="font-medium mb-2">Recent Events</h3>
+              <div className="space-y-2 text-sm max-h-40 overflow-y-auto">
+                {events.slice(0, 10).map((event, index) => (
+                  <div key={event.id} className="p-2 bg-gray-50 rounded">
+                    <div className="font-medium text-xs">
+                      {event.type} 
+                      {event.metadata?.ai_generated && ' (AI)'}
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      {new Date(event.timestamp).toLocaleTimeString()}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Graph Visualization */}
+        {/* Main Content */}
         <div className="flex-1 relative">
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onNodeClick={onNodeClick}
-            nodeTypes={nodeTypes}
-            fitView
-            attributionPosition="bottom-left"
-          >
-            <Background />
-            <Controls />
-            <MiniMap />
-          </ReactFlow>
+          {activeTab === 'graph' && (
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onNodeClick={onNodeClick}
+              nodeTypes={nodeTypes}
+              fitView
+              attributionPosition="bottom-left"
+            >
+              <Background />
+              <Controls />
+              <MiniMap />
+            </ReactFlow>
+          )}
+
+          {activeTab === 'analytics' && (
+            <div className="p-6 space-y-6">
+              <h2 className="text-xl font-bold">Cognitive Analytics</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white p-4 rounded-lg shadow">
+                  <h3 className="font-medium mb-4">Average Valence Distribution</h3>
+                  <div className="flex justify-center">
+                    <ValenceRadarChart 
+                      valenceData={tUnits.map(t => t.valence)} 
+                    />
+                  </div>
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg shadow">
+                  <h3 className="font-medium mb-4">T-unit Statistics</h3>
+                  <div className="space-y-2">
+                    <div>Total T-units: {tUnits.length}</div>
+                    <div>AI Generated: {tUnits.filter(t => t.ai_generated).length}</div>
+                    <div>Synthesis Events: {events.filter(e => e.type === 'synthesis').length}</div>
+                    <div>Transformation Events: {events.filter(e => e.type === 'transformation').length}</div>
+                    <div>Active Agents: {agents.length}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'timeline' && (
+            <div className="p-6 space-y-6">
+              <h2 className="text-xl font-bold">Cognitive Evolution Timeline</h2>
+              
+              <div className="bg-white p-4 rounded-lg shadow">
+                <h3 className="font-medium mb-4">Recent Activity</h3>
+                <CognitiveTimeline events={events} />
+              </div>
+              
+              <div className="bg-white p-4 rounded-lg shadow">
+                <h3 className="font-medium mb-4">Event History</h3>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {events.map(event => (
+                    <div key={event.id} className="p-3 border rounded">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-medium">{event.type}</div>
+                          <div className="text-sm text-gray-600">
+                            Agent: {event.agent_id || 'default'}
+                          </div>
+                          {event.metadata?.phase && (
+                            <div className="text-sm text-blue-600">
+                              Phase: {event.metadata.phase}
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(event.timestamp).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
