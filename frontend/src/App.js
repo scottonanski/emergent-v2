@@ -1184,21 +1184,123 @@ function App() {
         {/* Main Content */}
         <div className="flex-1 relative">
           {activeTab === 'graph' && (
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={handleNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              onNodeClick={onNodeClick}
-              nodeTypes={nodeTypes}
-              fitView
-              attributionPosition="bottom-left"
-            >
-              <Background />
-              <Controls />
-              <MiniMap />
-            </ReactFlow>
+            <>
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={handleNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                onNodeClick={onNodeClick}
+                nodeTypes={nodeTypes}
+                fitView
+                attributionPosition="bottom-left"
+              >
+                <Background />
+                <Controls />
+                <MiniMap />
+              </ReactFlow>
+
+              {/* Floating Memory Suggestions Panel */}
+              <AnimatePresence>
+                {showMemoryPanel && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9, x: 50 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, x: 50 }}
+                    className="absolute top-4 right-4 w-96 max-h-[70vh] bg-white rounded-lg shadow-2xl border border-purple-200 z-50 overflow-hidden"
+                    style={{ backdropFilter: 'blur(10px)' }}
+                  >
+                    <div className="bg-gradient-to-r from-purple-500 to-blue-500 text-white p-4">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-medium">💭 Memory Suggestions</h3>
+                        <div className="flex items-center gap-2">
+                          <label className="flex items-center text-xs">
+                            <input
+                              type="checkbox"
+                              checked={includeCrossAgent}
+                              onChange={(e) => setIncludeCrossAgent(e.target.checked)}
+                              className="mr-1"
+                            />
+                            Cross-Agent
+                          </label>
+                          <button
+                            onClick={() => setShowMemoryPanel(false)}
+                            className="text-white hover:text-purple-100 text-sm font-bold"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4">
+                      {isLoadingMemory ? (
+                        <div className="text-center py-8 text-purple-600">
+                          <div className="animate-spin inline-block w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full mr-2"></div>
+                          Searching memories...
+                        </div>
+                      ) : memorySuggestions.length > 0 ? (
+                        <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
+                          {memorySuggestions.map((suggestion, index) => (
+                            <motion.div 
+                              key={suggestion.id} 
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: index * 0.05 }}
+                              className="p-3 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:border-purple-300 transition-all hover:shadow-md"
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <div className="text-xs text-purple-600 font-medium">
+                                  {suggestion.agent_id !== agents.find(a => a.id === suggestion.agent_id)?.id 
+                                    ? suggestion.agent_id 
+                                    : agents.find(a => a.id === suggestion.agent_id)?.name || suggestion.agent_id}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <div className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full">
+                                    {(suggestion.final_score * 100).toFixed(0)}% match
+                                  </div>
+                                  <button
+                                    onClick={() => handleRecallMemory(suggestion)}
+                                    disabled={selectedNodes.includes(suggestion.id)}
+                                    className="px-3 py-1 bg-purple-500 text-white text-xs rounded-full hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                  >
+                                    {selectedNodes.includes(suggestion.id) ? '✓ Recalled' : 'Recall'}
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              <div className="text-sm text-gray-700 mb-3 leading-relaxed">
+                                {suggestion.content.length > 150 
+                                  ? `${suggestion.content.substring(0, 150)}...` 
+                                  : suggestion.content}
+                              </div>
+                              
+                              <div className="flex gap-4 text-xs text-gray-500">
+                                <span className="flex items-center gap-1">
+                                  🧠 <strong>{(suggestion.similarity * 100).toFixed(0)}%</strong>
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  💙 <strong>{(suggestion.valence_score * 100).toFixed(0)}%</strong>
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  ⏰ {new Date(suggestion.timestamp).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-gray-500 text-sm">
+                          <div className="text-4xl mb-2">🔍</div>
+                          No matching memories found
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
           )}
 
           {activeTab === 'analytics' && (
