@@ -255,10 +255,14 @@ function App() {
   const [useAI, setUseAI] = useState(true);
   const [showImportExport, setShowImportExport] = useState(false);
   const [agents, setAgents] = useState([]);
+  const [agentsWithStats, setAgentsWithStats] = useState([]);
   const [showAgentCreation, setShowAgentCreation] = useState(false);
   const [newAgentName, setNewAgentName] = useState('');
   const [newAgentDescription, setNewAgentDescription] = useState('');
   const [selectedAgentFilter, setSelectedAgentFilter] = useState('');
+  const [agentFilters, setAgentFilters] = useState(['all']); // For multi-select filtering
+  const [editingAgent, setEditingAgent] = useState(null);
+  const [editingAgentName, setEditingAgentName] = useState('');
   const [memorySuggestions, setMemorySuggestions] = useState([]);
   const [isLoadingMemory, setIsLoadingMemory] = useState(false);
   const [showMemoryPanel, setShowMemoryPanel] = useState(false);
