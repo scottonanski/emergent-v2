@@ -814,8 +814,20 @@ class CEPWebAPITester:
         # Get agents
         get_agents_result = self.test_get_agents()
         
+        # Get agents with stats
+        get_agents_with_stats_result = self.test_get_agents_with_stats()
+        
         # Create a new agent
         create_agent_result = self.test_create_agent()
+        
+        # Update an agent
+        update_agent_result = self.test_update_agent()
+        
+        # Delete an agent
+        delete_agent_result = self.test_delete_agent()
+        
+        # Get T-units filtered by agent
+        get_t_units_by_agent_result = self.test_get_t_units_by_agent()
         
         # Test synthesis
         synthesis_result = self.test_synthesize()
@@ -848,8 +860,12 @@ class CEPWebAPITester:
         print(f"T-unit retrieval: {'✅' if self.test_get_t_units else '❌'}")
         print(f"T-unit creation: {'✅' if create_t_unit_result else '❌'}")
         print(f"T-unit retrieval by ID: {'✅' if get_t_unit_by_id_result else '❌'}")
+        print(f"T-unit filtering by agent: {'✅' if get_t_units_by_agent_result else '❌'}")
         print(f"Agent retrieval: {'✅' if get_agents_result else '❌'}")
+        print(f"Agent stats retrieval: {'✅' if get_agents_with_stats_result else '❌'}")
         print(f"Agent creation: {'✅' if create_agent_result else '❌'}")
+        print(f"Agent update: {'✅' if update_agent_result else '❌'}")
+        print(f"Agent deletion: {'✅' if delete_agent_result else '❌'}")
         print(f"Synthesis operation: {'✅' if synthesis_result else '❌'}")
         print(f"Transformation operation: {'✅' if transformation_result else '❌'}")
         print(f"Memory suggestions: {'✅' if memory_suggestions_result else '❌'}")
