@@ -886,6 +886,399 @@ class CEPWebAPITester:
         
         return self.tests_passed == self.tests_run
 
-if __name__ == "__main__":
+def test_enhanced_agent_panel():
+    """Run tests specifically for the Enhanced Agent Panel functionality"""
     tester = CEPWebAPITester()
-    tester.run_all_tests()
+    print("\n======= Enhanced Agent Panel Test Suite =======")
+    
+    # Initialize sample data
+    if not tester.test_init_sample_data():
+        print("❌ Sample data initialization failed, stopping tests")
+        return False
+    
+    # Get agents to have a baseline
+    if not tester.test_get_agents():
+        print("❌ Agent retrieval failed, stopping tests")
+        return False
+    
+    # Test 1: Agent Stats Endpoint
+    print("\n=== Testing Agent Stats Endpoint ===")
+    success, response = tester.run_test(
+        "Get Agents with Stats",
+        "GET",
+        "agents/stats",
+        200
+    )
+    
+    if success and isinstance(response, list):
+        print(f"Retrieved {len(response)} agents with stats")
+        
+        # Validate agent stats structure
+        if len(response) > 0:
+            agent_stats = response[0]
+            required_fields = ["id", "name", "description", "created_at", "avatar", "color", "thought_count", "last_activity"]
+            missing_fields = [field for field in required_fields if field not in agent_stats]
+            
+            if missing_fields:
+                print(f"❌ Agent stats missing required fields: {missing_fields}")
+                agent_stats_test = False
+            else:
+                print("✅ Agent stats structure validation passed")
+                agent_stats_test = True
+        else:
+            agent_stats_test = True
+    else:
+        agent_stats_test = False
+    
+    # Test 2: Create Agent with Auto-assigned Avatar and Color
+    print("\n=== Testing Agent Creation with Auto-assigned Avatar and Color ===")
+    
+    # Create a test agent without specifying avatar and color
+    test_agent = {
+        "name": "Auto Avatar Agent",
+        "description": "Agent created to test auto-assigned avatar and color"
+    }
+    
+    success, response = tester.run_test(
+        "Create Agent with Auto-assigned Avatar and Color",
+        "POST",
+        "agents",
+        200,
+        data=test_agent
+    )
+    
+    if success:
+        # Validate agent creation with auto-assigned avatar and color
+        if "id" not in response:
+            print("❌ Created agent missing ID")
+            auto_avatar_test = False
+        elif "avatar" not in response:
+            print("❌ Created agent missing avatar")
+            auto_avatar_test = False
+        elif "color" not in response:
+            print("❌ Created agent missing color")
+            auto_avatar_test = False
+        else:
+            # Check if avatar is from the expected pool
+            avatars = ["🤖", "🧠", "👤", "🌀", "⚡", "🔮", "🎭", "🦋"]
+            colors = ["#6366f1", "#8b5cf6", "#ec4899", "#06b6d4", "#10b981", "#f59e0b", "#ef4444", "#84cc16"]
+            
+            if response["avatar"] not in avatars:
+                print(f"❌ Avatar {response['avatar']} not from expected pool {avatars}")
+                auto_avatar_test = False
+            elif response["color"] not in colors:
+                print(f"❌ Color {response['color']} not from expected palette {colors}")
+                auto_avatar_test = False
+            else:
+                print(f"✅ Agent created with auto-assigned avatar {response['avatar']} and color {response['color']}")
+                auto_avatar_test = True
+                # Store the agent ID for later tests
+                auto_agent_id = response["id"]
+                tester.agent_ids.append(auto_agent_id)
+    else:
+        auto_avatar_test = False
+    
+    # Test 3: Create Agent with Specific Avatar and Color
+    print("\n=== Testing Agent Creation with Specific Avatar and Color ===")
+    
+    # Create a test agent with specific avatar and color
+    test_agent_specific = {
+        "name": "Specific Avatar Agent",
+        "description": "Agent created with specific avatar and color",
+        "avatar": "🔮",
+        "color": "#10b981"
+    }
+    
+    success, response = tester.run_test(
+        "Create Agent with Specific Avatar and Color",
+        "POST",
+        "agents",
+        200,
+        data=test_agent_specific
+    )
+    
+    if success:
+        # Validate agent creation with specific avatar and color
+        if "id" not in response:
+            print("❌ Created agent missing ID")
+            specific_avatar_test = False
+        elif "avatar" not in response or response["avatar"] != test_agent_specific["avatar"]:
+            print(f"❌ Avatar not set correctly. Expected {test_agent_specific['avatar']}, got {response.get('avatar')}")
+            specific_avatar_test = False
+        elif "color" not in response or response["color"] != test_agent_specific["color"]:
+            print(f"❌ Color not set correctly. Expected {test_agent_specific['color']}, got {response.get('color')}")
+            specific_avatar_test = False
+        else:
+            print(f"✅ Agent created with specific avatar {response['avatar']} and color {response['color']}")
+            specific_avatar_test = True
+            # Store the agent ID for later tests
+            specific_agent_id = response["id"]
+            tester.agent_ids.append(specific_agent_id)
+    else:
+        specific_avatar_test = False
+    
+    # Test 4: Update Agent Name (Rename functionality)
+    print("\n=== Testing Agent Rename Functionality ===")
+    
+    if not hasattr(tester, 'agent_ids') or not tester.agent_ids:
+        print("❌ No agents available for rename test")
+        rename_test = False
+    else:
+        # Use the auto-assigned agent for the rename test
+        agent_id = tester.agent_ids[0]
+        
+        # Update the agent name
+        update_data = {
+            "name": "Renamed Agent"
+        }
+        
+        success, response = tester.run_test(
+            f"Rename Agent ({agent_id})",
+            "PUT",
+            f"agents/{agent_id}",
+            200,
+            data=update_data
+        )
+        
+        if success:
+            # Validate agent rename
+            if "id" not in response or response["id"] != agent_id:
+                print("❌ Updated agent ID doesn't match requested ID")
+                rename_test = False
+            elif "name" not in response or response["name"] != update_data["name"]:
+                print("❌ Agent name wasn't updated correctly")
+                rename_test = False
+            else:
+                print("✅ Agent rename validation passed")
+                rename_test = True
+        else:
+            rename_test = False
+    
+    # Test 5: Create T-unit for Agent and Verify Stats Update
+    print("\n=== Testing Agent Stats Update with New T-unit ===")
+    
+    if not hasattr(tester, 'agent_ids') or not tester.agent_ids:
+        print("❌ No agents available for stats update test")
+        stats_update_test = False
+    else:
+        # Use the auto-assigned agent for the stats update test
+        agent_id = tester.agent_ids[0]
+        
+        # Get initial stats
+        success, initial_stats_response = tester.run_test(
+            f"Get Initial Agent Stats ({agent_id})",
+            "GET",
+            "agents/stats",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get initial agent stats")
+            stats_update_test = False
+        else:
+            # Find our agent in the stats
+            initial_agent_stats = None
+            for agent in initial_stats_response:
+                if agent["id"] == agent_id:
+                    initial_agent_stats = agent
+                    break
+            
+            if not initial_agent_stats:
+                print(f"❌ Agent {agent_id} not found in stats response")
+                stats_update_test = False
+            else:
+                initial_thought_count = initial_agent_stats.get("thought_count", 0)
+                
+                # Create a new T-unit for this agent
+                test_t_unit = {
+                    "content": "Test T-unit for agent stats update",
+                    "valence": {
+                        "curiosity": 0.7,
+                        "certainty": 0.5,
+                        "dissonance": 0.3
+                    },
+                    "linkage": "test",
+                    "agent_id": agent_id
+                }
+                
+                success, t_unit_response = tester.run_test(
+                    f"Create T-Unit for Agent {agent_id}",
+                    "POST",
+                    "t-units",
+                    200,
+                    data=test_t_unit
+                )
+                
+                if not success:
+                    print("❌ Failed to create T-unit for agent")
+                    stats_update_test = False
+                else:
+                    # Get updated stats
+                    success, updated_stats_response = tester.run_test(
+                        f"Get Updated Agent Stats ({agent_id})",
+                        "GET",
+                        "agents/stats",
+                        200
+                    )
+                    
+                    if not success:
+                        print("❌ Failed to get updated agent stats")
+                        stats_update_test = False
+                    else:
+                        # Find our agent in the updated stats
+                        updated_agent_stats = None
+                        for agent in updated_stats_response:
+                            if agent["id"] == agent_id:
+                                updated_agent_stats = agent
+                                break
+                        
+                        if not updated_agent_stats:
+                            print(f"❌ Agent {agent_id} not found in updated stats response")
+                            stats_update_test = False
+                        else:
+                            updated_thought_count = updated_agent_stats.get("thought_count", 0)
+                            
+                            # Check if thought count increased
+                            if updated_thought_count <= initial_thought_count:
+                                print(f"❌ Thought count didn't increase. Initial: {initial_thought_count}, Updated: {updated_thought_count}")
+                                stats_update_test = False
+                            else:
+                                print(f"✅ Thought count increased from {initial_thought_count} to {updated_thought_count}")
+                                
+                                # Check if last_activity was updated
+                                if "last_activity" not in updated_agent_stats:
+                                    print("❌ last_activity field missing in updated stats")
+                                    stats_update_test = False
+                                else:
+                                    print("✅ last_activity field present in updated stats")
+                                    stats_update_test = True
+    
+    # Test 6: Agent Filtering (T-units by agent)
+    print("\n=== Testing Agent Filtering ===")
+    
+    if not hasattr(tester, 'agent_ids') or not tester.agent_ids:
+        print("❌ No agents available for filtering test")
+        filtering_test = False
+    else:
+        # Use the auto-assigned agent for the filtering test
+        agent_id = tester.agent_ids[0]
+        
+        success, response = tester.run_test(
+            f"Get T-Units by Agent ({agent_id})",
+            "GET",
+            f"t-units?agent_id={agent_id}",
+            200
+        )
+        
+        if success and isinstance(response, list):
+            print(f"Retrieved {len(response)} T-units for agent {agent_id}")
+            
+            # Validate that all T-units belong to the specified agent
+            if len(response) > 0:
+                all_match = True
+                for t_unit in response:
+                    if "agent_id" not in t_unit or t_unit["agent_id"] != agent_id:
+                        print(f"❌ T-unit {t_unit.get('id')} doesn't belong to agent {agent_id}")
+                        all_match = False
+                
+                if all_match:
+                    print("✅ T-unit filtering by agent validation passed")
+                    filtering_test = True
+                else:
+                    filtering_test = False
+            else:
+                print("⚠️ No T-units found for agent, but endpoint returned successfully")
+                filtering_test = True
+        else:
+            filtering_test = False
+    
+    # Test 7: Delete Agent
+    print("\n=== Testing Agent Deletion ===")
+    
+    # Create a new agent specifically for deletion
+    test_agent = {
+        "name": "Agent To Delete",
+        "description": "This agent will be deleted in the test"
+    }
+    
+    success, response = tester.run_test(
+        "Create Agent for Deletion",
+        "POST",
+        "agents",
+        200,
+        data=test_agent
+    )
+    
+    if not success or "id" not in response:
+        print("❌ Failed to create agent for deletion test")
+        deletion_test = False
+    else:
+        agent_id = response["id"]
+        
+        # Delete the agent
+        success, response = tester.run_test(
+            f"Delete Agent ({agent_id})",
+            "DELETE",
+            f"agents/{agent_id}",
+            200
+        )
+        
+        if success:
+            # Validate deletion response
+            if "message" not in response or "deleted successfully" not in response["message"]:
+                print("❌ Deletion response doesn't confirm successful deletion")
+                deletion_test = False
+            else:
+                # Verify the agent is actually gone by getting all agents and checking
+                verify_success, agents_response = tester.run_test(
+                    "Get All Agents After Deletion",
+                    "GET",
+                    "agents",
+                    200
+                )
+                
+                if verify_success and isinstance(agents_response, list):
+                    # Check if the deleted agent ID is in the list
+                    deleted_agent_exists = any(agent["id"] == agent_id for agent in agents_response)
+                    
+                    if not deleted_agent_exists:
+                        print("✅ Agent deletion validation passed")
+                        deletion_test = True
+                    else:
+                        print("❌ Agent still exists after deletion")
+                        deletion_test = False
+                else:
+                    deletion_test = False
+        else:
+            deletion_test = False
+    
+    # Print results
+    print("\n======= Enhanced Agent Panel Test Results =======")
+    print(f"Agent Stats Endpoint: {'✅' if agent_stats_test else '❌'}")
+    print(f"Auto-assigned Avatar and Color: {'✅' if auto_avatar_test else '❌'}")
+    print(f"Specific Avatar and Color: {'✅' if specific_avatar_test else '❌'}")
+    print(f"Agent Rename Functionality: {'✅' if rename_test else '❌'}")
+    print(f"Agent Stats Update: {'✅' if stats_update_test else '❌'}")
+    print(f"Agent Filtering: {'✅' if filtering_test else '❌'}")
+    print(f"Agent Deletion: {'✅' if deletion_test else '❌'}")
+    
+    overall_success = (
+        agent_stats_test and 
+        auto_avatar_test and 
+        specific_avatar_test and 
+        rename_test and 
+        stats_update_test and 
+        filtering_test and 
+        deletion_test
+    )
+    
+    print(f"\nOverall Enhanced Agent Panel Test Result: {'✅ PASSED' if overall_success else '❌ FAILED'}")
+    return overall_success
+
+if __name__ == "__main__":
+    # Run the enhanced agent panel tests
+    test_enhanced_agent_panel()
+    
+    # Alternatively, run all tests
+    # tester = CEPWebAPITester()
+    # tester.run_all_tests()
