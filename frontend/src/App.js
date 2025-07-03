@@ -379,13 +379,10 @@ function App() {
   }, []);
 
   // Convert T-units to graph with tree layout
-  const convertTUnitsToGraph = useCallback((tUnits, preservePositions = false) => {
+  const convertTUnitsToGraph = useCallback((tUnits, preservePositions = false, currentNodes = []) => {
     // Build tree structure
     const nodeMap = new Map();
     const rootNodes = [];
-    
-    // Get current nodes for position preservation
-    const currentNodes = preservePositions ? nodes : [];
     
     // Create node map, preserving existing positions if requested
     tUnits.forEach(tUnit => {
