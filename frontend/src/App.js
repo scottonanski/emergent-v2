@@ -813,6 +813,16 @@ function App() {
               <label className="text-sm font-medium">Use AI Enhancement</label>
             </div>
 
+            {/* Reset Layout Button */}
+            <div>
+              <button
+                onClick={resetTreeLayout}
+                className="w-full px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
+              >
+                🔄 Reset Tree Layout
+              </button>
+            </div>
+
             {/* Selection Info */}
             <div>
               <h3 className="font-medium mb-2">Selected T-units: {selectedNodes.length}</h3>
