@@ -507,8 +507,8 @@ function App() {
     setEdges(graphEdges);
   }, [selectedNodes, recalledNodes, setNodes, setEdges]);
 
-  // Reset World functionality
-  const resetWorld = useCallback(async () => {
+  // Reset World functionality - simplified for debugging
+  const resetWorld = async () => {
     console.log('Reset World button clicked!'); // Debug log
     
     if (!window.confirm('Are you sure you want to reset the entire world? This will delete all thoughts, agents, and events.')) {
@@ -550,7 +550,7 @@ function App() {
       setIsLoading(false);
       console.log('Reset operation complete'); // Debug log
     }
-  }, [setNodes, setEdges]);
+  };
 
   // Create manual thought
   const createManualThought = async () => {
