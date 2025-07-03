@@ -1570,6 +1570,72 @@ function App() {
           {/* Main Canvas */}
           <div className="flex-1 relative">
             {activeTab === 'graph' && (
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={handleNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                onNodeClick={onNodeClick}
+                nodeTypes={nodeTypes}
+                fitView
+                className="bg-gray-50"
+              >
+                <Background />
+                <Controls />
+                <MiniMap />
+              </ReactFlow>
+            )}
+            {activeTab === 'analytics' && (
+              <div className="p-4 space-y-4">
+                <h2 className="text-xl font-bold">Analytics</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white p-4 rounded-lg shadow">
+                    <h3 className="text-lg font-medium mb-4">Valence Distribution</h3>
+                    <ValenceRadarChart valenceData={valenceData} />
+                  </div>
+                  <div className="bg-white p-4 rounded-lg shadow">
+                    <h3 className="text-lg font-medium mb-4">Cognitive Timeline</h3>
+                    <CognitiveTimeline events={events} />
+                  </div>
+                </div>
+              </div>
+            )}
+            {activeTab === 'timeline' && (
+              <div className="p-4">
+                <h2 className="text-xl font-bold mb-4">Event Timeline</h2>
+                <div className="space-y-4">
+                  {events.map((event, index) => (
+                    <div key={event.id} className="bg-white p-4 rounded-lg shadow">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-medium">{event.type}</div>
+                          <div className="text-sm text-gray-600">
+                            {new Date(event.timestamp).toLocaleString()}
+                          </div>
+                        </div>
+                        {event.metadata?.ai_generated && (
+                          <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
+                            AI Generated
+                          </span>
+                        )}
+                      </div>
+                      {event.metadata && (
+                        <pre className="mt-2 text-sm bg-gray-50 p-2 rounded overflow-x-auto">
+                          {JSON.stringify(event.metadata, null, 2)}
+                        </pre>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Control Panel */}
+        <div className="w-80 bg-white shadow-lg overflow-y-auto">
+          <div className="p-4 space-y-4">
             {/* AI Toggle */}
             <div className="flex items-center space-x-2">
               <input
