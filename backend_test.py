@@ -171,12 +171,13 @@ class CEPWebAPITester:
         # Select the first T-unit for transformation
         t_unit_id = self.t_unit_ids[0]
         
+        # Test with AI transformation
         success, response = self.run_test(
-            "Transform T-Unit",
+            "Transform T-Unit with AI",
             "POST",
             "transform",
             200,
-            data={"t_unit_id": t_unit_id, "anomaly": "Test anomaly for transformation"}
+            data={"t_unit_id": t_unit_id, "anomaly": "Test anomaly for transformation", "use_ai": True}
         )
         
         if success:
@@ -192,14 +193,42 @@ class CEPWebAPITester:
             for t_unit in response:
                 if "phase" in t_unit and t_unit["phase"] in phase_found:
                     phase_found[t_unit["phase"]] = True
+                
+                # Check AI generation flag
+                if "ai_generated" not in t_unit or not t_unit["ai_generated"]:
+                    print(f"❌ AI-generated flag not set correctly for phase {t_unit.get('phase')}")
+                    return False
             
             missing_phases = [phase for phase, found in phase_found.items() if not found]
             if missing_phases:
                 print(f"❌ Missing transformation phases: {missing_phases}")
                 return False
             
-            print("✅ Transformation validation passed")
-            return True
+            print("✅ AI Transformation validation passed")
+            
+            # Now test without AI
+            success, response = self.run_test(
+                "Transform T-Unit without AI",
+                "POST",
+                "transform",
+                200,
+                data={"t_unit_id": t_unit_id, "anomaly": "Test anomaly for basic transformation", "use_ai": False}
+            )
+            
+            if success:
+                # Check that content format for non-AI transformation
+                for t_unit in response:
+                    if "content" not in t_unit or not t_unit["content"].startswith(t_unit.get("phase", "").upper()):
+                        print(f"❌ Non-AI transformation content not properly formatted for phase {t_unit.get('phase')}")
+                        return False
+                    
+                    # Check AI generation flag is false
+                    if "ai_generated" not in t_unit or t_unit["ai_generated"]:
+                        print(f"❌ AI-generated flag should be false for non-AI transformation in phase {t_unit.get('phase')}")
+                        return False
+                
+                print("✅ Non-AI Transformation validation passed")
+                return True
         return False
 
     def test_get_events(self):
