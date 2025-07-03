@@ -265,6 +265,22 @@ function App() {
   const [includeCrossAgent, setIncludeCrossAgent] = useState(false);
   const [recalledNodes, setRecalledNodes] = useState([]);
 
+  // Reset tree layout (remove manual positioning)
+  const resetTreeLayout = useCallback(() => {
+    // Remove manual positioning flags and recalculate
+    setNodes(currentNodes => 
+      currentNodes.map(node => ({
+        ...node,
+        data: {
+          ...node.data,
+          hasManualPosition: false
+        }
+      }))
+    );
+    // Trigger layout recalculation
+    convertTUnitsToGraph(tUnits, false);
+  }, [setNodes, convertTUnitsToGraph, tUnits]);
+
   // Custom nodes change handler to track manual positioning
   const handleNodesChange = useCallback((changes) => {
     onNodesChange(changes);
