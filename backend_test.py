@@ -2,16 +2,23 @@ import requests
 import unittest
 import json
 import time
+import os
 from typing import List, Dict, Any
+from dotenv import load_dotenv
+
+# Load environment variables from frontend/.env
+load_dotenv('/app/frontend/.env')
 
 class CEPWebAPITester:
-    def __init__(self, base_url="https://a1c6a2e9-f7ee-4d24-8e40-7c1d4b81f454.preview.emergentagent.com"):
-        self.base_url = base_url
-        self.api_url = f"{base_url}/api"
+    def __init__(self):
+        # Get backend URL from environment variable
+        self.base_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://8f24eb66-08e1-4672-90f7-7df4db075b79.preview.emergentagent.com')
+        self.api_url = f"{self.base_url}/api"
         self.tests_run = 0
         self.tests_passed = 0
         self.t_unit_ids = []
         self.agent_ids = []
+        print(f"Using backend API URL: {self.api_url}")
 
     def run_test(self, name, method, endpoint, expected_status, data=None):
         """Run a single API test"""
