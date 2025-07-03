@@ -288,8 +288,6 @@ function App() {
   const [errorMessage, setErrorMessage] = useState('');
 
   // Phase 2: Onboarding & Polish State
-  const [showTutorial, setShowTutorial] = useState(false);
-  const [tutorialStep, setTutorialStep] = useState(1);
   const [isThinking, setIsThinking] = useState(false);
   const [thinkingMessage, setThinkingMessage] = useState('');
 
