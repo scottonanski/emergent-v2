@@ -54,7 +54,7 @@ const TUnitNode = ({ data }) => {
       
       {/* Agent Badge */}
       {data.agent_id && data.agent_id !== 'default' && (
-        <div className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-1 py-0.5 rounded">
+        <div className="absolute -top-2 -left-2 bg-blue-500 text-white text-xs px-1 py-0.5 rounded shadow-md z-10">
           {data.agent_id.split('_')[1]?.toUpperCase() || 'A'}
         </div>
       )}
