@@ -189,6 +189,9 @@
         - working: true
           agent: "main"
           comment: "ENHANCED: Improved reset feedback with detailed success message showing what was cleared, better error handling with specific error messages, and loading state indicator on button (shows 'Resetting...' while processing). Added sample data for testing."
+        - working: true
+          agent: "main"
+          comment: "SANDBOX FIX: Discovered that browser alert() and confirm() are blocked in sandboxed iframe environment. Replaced all browser modals (alert, confirm) with custom React modals using AnimatePresence. Reset World button now works properly with beautiful confirmation dialog, success message, and error handling."
 
   - task: "Phase 1: Manual Thought Input with Valence Sliders"
     implemented: true
