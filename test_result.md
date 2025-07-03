@@ -138,6 +138,9 @@
         - working: false
           agent: "testing"
           comment: "Additional testing confirms the edge rendering issue. DOM inspection shows no edge elements or paths are being created despite React Flow being properly initialized. The graph state shows 5 nodes but 0 edges. All nodes appear to be positioned on the same level (y=50) rather than in a hierarchical structure, suggesting the level calculation or parent-child relationship detection may not be working correctly."
+        - working: false
+          agent: "testing"
+          comment: "Root cause identified: The T-unit data from the API has empty 'parents' and 'children' arrays. Sample data shows: Parents: [], Children: []. This explains why all nodes are positioned on the same level (as they're all treated as root nodes) and why no edges are rendered (no parent-child relationships). The tree layout algorithm itself appears to be correctly implemented, but it's not receiving the proper relationship data from the backend. Interestingly, synthesis operation does create a new level in the tree, suggesting the backend is establishing relationships for new operations but not for the initial data."
 
 ## metadata:
   created_by: "main_agent"
