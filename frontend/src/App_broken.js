@@ -2338,6 +2338,7 @@ function App() {
             </motion.div>
           </motion.div>
         )}
+      </AnimatePresence>
     </div>
   );
 }
