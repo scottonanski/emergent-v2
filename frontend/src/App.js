@@ -828,12 +828,14 @@ function App() {
 
   const handleMultiAgentExchange = async () => {
     if (selectedNodes.length !== 1) {
-      alert('Please select exactly 1 T-unit for exchange');
+      setErrorMessage('Please select exactly 1 T-unit for exchange');
+      setShowErrorMessage(true);
       return;
     }
 
     if (!selectedAgent) {
-      alert('Please select a target agent');
+      setErrorMessage('Please select a target agent');
+      setShowErrorMessage(true);
       return;
     }
 
@@ -850,10 +852,12 @@ function App() {
       setSelectedNodes([]);
       setShowMultiAgent(false);
       setSelectedAgent('');
-      alert('Thought successfully sent to agent!');
+      setSuccessMessage('Thought successfully sent to agent!');
+      setShowSuccessMessage(true);
     } catch (error) {
       console.error('Error during multi-agent exchange:', error);
-      alert('Error during multi-agent exchange');
+      setErrorMessage('Error during multi-agent exchange');
+      setShowErrorMessage(true);
     } finally {
       setIsLoading(false);
     }
