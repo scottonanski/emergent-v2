@@ -90,6 +90,23 @@ class MultiAgentExchange(BaseModel):
     t_unit_id: str
     exchange_type: str = Field(default="anomaly_sharing")
 
+class MemorySuggestion(BaseModel):
+    id: str
+    content: str
+    similarity: float
+    valence_score: float
+    final_score: float
+    agent_id: str
+    timestamp: datetime
+    valence: Valence
+
+class MemorySuggestRequest(BaseModel):
+    agent_id: str
+    t_unit_id: str
+    limit: int = Field(default=10, ge=1, le=50)
+    include_cross_agent: bool = Field(default=False, description="Include memories from other agents")
+    valence_weight: float = Field(default=0.25, ge=0.0, le=1.0, description="Weight for valence similarity in scoring")
+
 # ============== AI INTEGRATION ==============
 
 async def ai_synthesize_content(contents: List[str], valences: List[Valence]) -> tuple[str, Valence]:
