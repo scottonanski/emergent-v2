@@ -908,6 +908,156 @@ function App() {
             </div>
           </motion.div>
         )}
+
+        {/* Create Thought Modal */}
+        <AnimatePresence>
+          {showCreateThought && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+              onClick={() => setShowCreateThought(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white rounded-lg shadow-2xl p-6 w-96 max-w-[90vw] max-h-[80vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-green-800">✨ Create New Thought</h2>
+                  <button
+                    onClick={() => setShowCreateThought(false)}
+                    className="text-gray-500 hover:text-gray-700 text-xl"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Thought Content */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Thought Content
+                    </label>
+                    <textarea
+                      value={newThoughtContent}
+                      onChange={(e) => setNewThoughtContent(e.target.value)}
+                      placeholder="Enter your thought here..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      rows={4}
+                    />
+                  </div>
+
+                  {/* Agent Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Agent
+                    </label>
+                    <select
+                      value={newThoughtAgent}
+                      onChange={(e) => setNewThoughtAgent(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    >
+                      <option value="">Select an agent...</option>
+                      {agents.map(agent => (
+                        <option key={agent.id} value={agent.id}>
+                          {agent.name} ({agent.id})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Valence Sliders */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Valence (Emotional Fingerprint)
+                    </label>
+                    
+                    {/* Curiosity Slider */}
+                    <div className="mb-3">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm text-green-600 font-medium">🧠 Curiosity</span>
+                        <span className="text-sm text-gray-500">{newThoughtValence.curiosity.toFixed(2)}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={newThoughtValence.curiosity}
+                        onChange={(e) => setNewThoughtValence(prev => ({
+                          ...prev,
+                          curiosity: parseFloat(e.target.value)
+                        }))}
+                        className="w-full h-2 bg-green-200 rounded-lg appearance-none cursor-pointer slider-green"
+                      />
+                    </div>
+
+                    {/* Certainty Slider */}
+                    <div className="mb-3">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm text-blue-600 font-medium">🎯 Certainty</span>
+                        <span className="text-sm text-gray-500">{newThoughtValence.certainty.toFixed(2)}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={newThoughtValence.certainty}
+                        onChange={(e) => setNewThoughtValence(prev => ({
+                          ...prev,
+                          certainty: parseFloat(e.target.value)
+                        }))}
+                        className="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer slider-blue"
+                      />
+                    </div>
+
+                    {/* Dissonance Slider */}
+                    <div className="mb-3">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm text-red-600 font-medium">⚡ Dissonance</span>
+                        <span className="text-sm text-gray-500">{newThoughtValence.dissonance.toFixed(2)}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={newThoughtValence.dissonance}
+                        onChange={(e) => setNewThoughtValence(prev => ({
+                          ...prev,
+                          dissonance: parseFloat(e.target.value)
+                        }))}
+                        className="w-full h-2 bg-red-200 rounded-lg appearance-none cursor-pointer slider-red"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 pt-4">
+                    <button
+                      onClick={createManualThought}
+                      disabled={isLoading || !newThoughtContent.trim() || !newThoughtAgent}
+                      className="flex-1 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isLoading ? 'Creating...' : 'Create Thought'}
+                    </button>
+                    <button
+                      onClick={() => setShowCreateThought(false)}
+                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Tab Navigation */}
