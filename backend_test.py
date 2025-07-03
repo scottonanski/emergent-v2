@@ -231,32 +231,158 @@ class CEPWebAPITester:
                 return True
         return False
 
-    def test_get_events(self):
-        """Test getting events"""
-        print("\n=== Testing Events Retrieval ===")
+    def test_get_agents(self):
+        """Test getting agents"""
+        print("\n=== Testing Agents Retrieval ===")
         success, response = self.run_test(
-            "Get Events",
+            "Get Agents",
             "GET",
-            "events",
+            "agents",
             200
         )
         
         if success and isinstance(response, list):
-            print(f"Retrieved {len(response)} events")
+            print(f"Retrieved {len(response)} agents")
             
-            # Validate event structure
+            # Validate agent structure
             if len(response) > 0:
-                event = response[0]
-                required_fields = ["id", "type", "t_unit_id", "timestamp", "metadata"]
-                missing_fields = [field for field in required_fields if field not in event]
+                agent = response[0]
+                required_fields = ["id", "name", "description", "created_at"]
+                missing_fields = [field for field in required_fields if field not in agent]
                 
                 if missing_fields:
-                    print(f"❌ Event missing required fields: {missing_fields}")
+                    print(f"❌ Agent missing required fields: {missing_fields}")
                     return False
                 
-                print("✅ Event structure validation passed")
+                # Store agent IDs for later tests
+                self.agent_ids = [agent["id"] for agent in response]
+                
+                print("✅ Agent structure validation passed")
             return True
         return False
+        
+    def test_analytics_endpoints(self):
+        """Test analytics endpoints"""
+        print("\n=== Testing Analytics Endpoints ===")
+        
+        # Test valence distribution
+        success, response = self.run_test(
+            "Get Valence Distribution",
+            "GET",
+            "analytics/valence-distribution",
+            200
+        )
+        
+        if not success:
+            return False
+            
+        # Validate valence distribution structure
+        required_fields = ["curiosity", "certainty", "dissonance"]
+        missing_fields = [field for field in required_fields if field not in response]
+        
+        if missing_fields:
+            print(f"❌ Valence distribution missing required fields: {missing_fields}")
+            return False
+            
+        # Test cognitive timeline
+        success, response = self.run_test(
+            "Get Cognitive Timeline",
+            "GET",
+            "analytics/cognitive-timeline",
+            200
+        )
+        
+        if not success:
+            return False
+            
+        # Validate timeline structure
+        if not isinstance(response, list):
+            print("❌ Cognitive timeline should be a list")
+            return False
+            
+        if len(response) > 0:
+            event = response[0]
+            required_fields = ["timestamp", "type", "t_unit_id"]
+            missing_fields = [field for field in required_fields if field not in event]
+            
+            if missing_fields:
+                print(f"❌ Timeline event missing required fields: {missing_fields}")
+                return False
+        
+        print("✅ Analytics endpoints validation passed")
+        return True
+        
+    def test_genesis_export(self):
+        """Test genesis log export"""
+        print("\n=== Testing Genesis Log Export ===")
+        success, response = self.run_test(
+            "Export Genesis Log",
+            "GET",
+            "genesis/export",
+            200
+        )
+        
+        if success:
+            # Validate genesis log structure
+            required_fields = ["t_units", "events", "agents", "exported_at", "version"]
+            missing_fields = [field for field in required_fields if field not in response]
+            
+            if missing_fields:
+                print(f"❌ Genesis log missing required fields: {missing_fields}")
+                return False
+                
+            print("✅ Genesis log export validation passed")
+            return True
+        return False
+        
+    def test_agent_filtered_endpoints(self):
+        """Test agent-filtered endpoints"""
+        print("\n=== Testing Agent-Filtered Endpoints ===")
+        
+        if not self.agent_ids:
+            print("❌ No agents available for agent-filtered tests")
+            return False
+            
+        agent_id = self.agent_ids[0]
+        
+        # Test agent-filtered T-units
+        success, response = self.run_test(
+            "Get Agent-Filtered T-Units",
+            "GET",
+            f"t-units?agent_id={agent_id}",
+            200
+        )
+        
+        if not success:
+            return False
+            
+        # Validate that all returned T-units belong to the agent
+        if isinstance(response, list) and len(response) > 0:
+            for t_unit in response:
+                if t_unit.get("agent_id") != agent_id:
+                    print(f"❌ T-unit with agent_id {t_unit.get('agent_id')} returned when filtering for {agent_id}")
+                    return False
+        
+        # Test agent-filtered events
+        success, response = self.run_test(
+            "Get Agent-Filtered Events",
+            "GET",
+            f"events?agent_id={agent_id}",
+            200
+        )
+        
+        if not success:
+            return False
+            
+        # Validate that all returned events belong to the agent
+        if isinstance(response, list) and len(response) > 0:
+            for event in response:
+                if event.get("agent_id") != agent_id:
+                    print(f"❌ Event with agent_id {event.get('agent_id')} returned when filtering for {agent_id}")
+                    return False
+        
+        print("✅ Agent-filtered endpoints validation passed")
+        return True
 
     def run_all_tests(self):
         """Run all API tests"""
