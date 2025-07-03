@@ -548,42 +548,39 @@ async def create_agent(agent: AgentInfo):
     await db.agents.insert_one(agent.dict())
     return agent
 
-@api_router.post("/multi-agent/exchange")
-async def multi_agent_exchange(exchange: MultiAgentExchange):
-    """Exchange T-units between agents"""
-    # Get the T-unit to exchange
-    t_unit_doc = await db.t_units.find_one({"id": exchange.t_unit_id})
+@api_router.post("/memory/suggest", response_model=List[MemorySuggestion])
+async def suggest_memories(request: MemorySuggestRequest):
+    """Find semantically similar T-units from memory"""
+    # Get the target T-unit
+    t_unit_doc = await db.t_units.find_one({"id": request.t_unit_id})
     if not t_unit_doc:
         raise HTTPException(status_code=404, detail="T-unit not found")
     
-    original_t_unit = TUnit(**t_unit_doc)
+    target_t_unit = TUnit(**t_unit_doc)
     
-    # Create a copy for the target agent
-    exchanged_t_unit = TUnit(
-        content=f"[RECEIVED] {original_t_unit.content}",
-        valence=original_t_unit.valence,
-        parents=[original_t_unit.id],
-        linkage="exchanged",
-        agent_id=exchange.target_agent_id
+    # Find memory suggestions
+    suggestions = await find_memory_suggestions(
+        target_t_unit=target_t_unit,
+        agent_id=request.agent_id,
+        limit=request.limit,
+        include_cross_agent=request.include_cross_agent,
+        valence_weight=request.valence_weight
     )
     
-    await db.t_units.insert_one(exchanged_t_unit.dict())
-    
-    # Log exchange event
+    # Log memory suggestion event
     event = Event(
-        type="multi_agent_exchange",
-        t_unit_id=exchanged_t_unit.id,
+        type="memory_suggestion",
+        t_unit_id=request.t_unit_id,
         metadata={
-            "source_agent": exchange.source_agent_id,
-            "target_agent": exchange.target_agent_id,
-            "original_t_unit": exchange.t_unit_id,
-            "exchange_type": exchange.exchange_type
+            "suggestions_count": len(suggestions),
+            "include_cross_agent": request.include_cross_agent,
+            "valence_weight": request.valence_weight
         },
-        agent_id=exchange.target_agent_id
+        agent_id=request.agent_id
     )
     await db.events.insert_one(event.dict())
     
-    return {"message": "T-unit exchanged successfully", "new_t_unit_id": exchanged_t_unit.id}
+    return suggestions
 
 @api_router.post("/genesis/import")
 async def import_genesis_log(file: UploadFile = File(...)):
