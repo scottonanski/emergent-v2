@@ -50,6 +50,8 @@ class TUnit(BaseModel):
     phase: Optional[str] = Field(default=None, description="Transformation phase if applicable")
     agent_id: str = Field(default="default", description="Agent that created this T-unit")
     ai_generated: bool = Field(default=False, description="Whether content was AI-generated")
+    embedding: Optional[List[float]] = Field(default=None, description="OpenAI embedding vector for semantic similarity")
+    embedding_model: Optional[str] = Field(default=None, description="Model used for embedding generation")
 
 class TUnitCreate(BaseModel):
     content: str
