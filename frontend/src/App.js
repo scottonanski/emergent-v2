@@ -446,7 +446,6 @@ function App() {
   }, []);
 
   // Convert T-units to graph with top-down tree layout
-  // Convert T-units to graph with top-down tree layout
   const convertTUnitsToGraph = useCallback((tUnits, preservePositions = false, currentNodes = []) => {
     // Build tree structure
     const nodeMap = new Map();
