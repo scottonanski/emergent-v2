@@ -1064,12 +1064,30 @@ function App() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     >
                       <option value="">Select an agent...</option>
+                      {agents.length === 0 && (
+                        <option value="CREATE_NEW">+ Create new agent "Thinker"</option>
+                      )}
                       {agents.map(agent => (
                         <option key={agent.id} value={agent.id}>
                           {agent.name} ({agent.id})
                         </option>
                       ))}
+                      {agents.length > 0 && (
+                        <option value="CREATE_NEW">+ Create new agent</option>
+                      )}
                     </select>
+                    
+                    {newThoughtAgent === 'CREATE_NEW' && (
+                      <div className="mt-3">
+                        <input
+                          type="text"
+                          placeholder="Enter agent name (e.g., Thinker, Explorer, Analyst)"
+                          value={newAgentName}
+                          onChange={(e) => setNewAgentName(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* Valence Sliders */}
