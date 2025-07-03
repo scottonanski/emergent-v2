@@ -366,7 +366,8 @@ function App() {
         linkage: tUnit.linkage,
         timestamp: tUnit.timestamp,
         agent_id: tUnit.agent_id,
-        ai_generated: tUnit.ai_generated
+        ai_generated: tUnit.ai_generated,
+        is_recalled: recalledNodes.includes(tUnit.id)
       },
       selected: selectedNodes.includes(tUnit.id)
     }));
@@ -388,7 +389,7 @@ function App() {
 
     setNodes(graphNodes);
     setEdges(graphEdges);
-  }, [selectedNodes, setNodes, setEdges]);
+  }, [selectedNodes, recalledNodes, setNodes, setEdges]);
 
   // Initialize sample data
   const initSampleData = async () => {
