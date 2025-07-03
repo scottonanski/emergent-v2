@@ -238,33 +238,274 @@ class CEPWebAPITester:
                 return True
         return False
 
-    def test_get_agents(self):
-        """Test getting agents"""
-        print("\n=== Testing Agents Retrieval ===")
+    def test_create_t_unit(self):
+        """Test creating a new T-unit"""
+        print("\n=== Testing T-Unit Creation ===")
+        
+        # Create a test T-unit
+        test_t_unit = {
+            "content": "Test T-unit for tree structure validation",
+            "valence": {
+                "curiosity": 0.7,
+                "certainty": 0.5,
+                "dissonance": 0.3
+            },
+            "linkage": "test",
+            "agent_id": "test_agent"
+        }
+        
         success, response = self.run_test(
-            "Get Agents",
+            "Create T-Unit",
+            "POST",
+            "t-units",
+            200,
+            data=test_t_unit
+        )
+        
+        if success:
+            # Validate T-unit creation
+            if "id" not in response:
+                print("❌ Created T-unit missing ID")
+                return False
+            
+            if "content" not in response or response["content"] != test_t_unit["content"]:
+                print("❌ Created T-unit content doesn't match input")
+                return False
+            
+            # Store the new T-unit ID for later tests
+            self.t_unit_ids.append(response["id"])
+            
+            print("✅ T-unit creation validation passed")
+            return True
+        return False
+    
+    def test_get_t_unit_by_id(self):
+        """Test getting a specific T-unit by ID"""
+        print("\n=== Testing T-Unit Retrieval by ID ===")
+        
+        if not self.t_unit_ids:
+            print("❌ No T-units available for ID retrieval test")
+            return False
+        
+        # Get the first T-unit by ID
+        t_unit_id = self.t_unit_ids[0]
+        
+        success, response = self.run_test(
+            f"Get T-Unit by ID ({t_unit_id})",
             "GET",
-            "agents",
+            f"t-units/{t_unit_id}",
             200
         )
         
-        if success and isinstance(response, list):
-            print(f"Retrieved {len(response)} agents")
+        if success:
+            # Validate T-unit retrieval
+            if "id" not in response or response["id"] != t_unit_id:
+                print("❌ Retrieved T-unit ID doesn't match requested ID")
+                return False
             
-            # Validate agent structure
+            # Validate T-unit structure
+            required_fields = ["id", "content", "valence", "parents", "children", "linkage", "timestamp"]
+            missing_fields = [field for field in required_fields if field not in response]
+            
+            if missing_fields:
+                print(f"❌ Retrieved T-unit missing required fields: {missing_fields}")
+                return False
+            
+            print("✅ T-unit retrieval by ID validation passed")
+            return True
+        return False
+    
+    def test_create_agent(self):
+        """Test creating a new agent"""
+        print("\n=== Testing Agent Creation ===")
+        
+        # Create a test agent
+        test_agent = {
+            "name": "Test Agent",
+            "description": "Agent created for testing purposes"
+        }
+        
+        success, response = self.run_test(
+            "Create Agent",
+            "POST",
+            "agents",
+            200,
+            data=test_agent
+        )
+        
+        if success:
+            # Validate agent creation
+            if "id" not in response:
+                print("❌ Created agent missing ID")
+                return False
+            
+            if "name" not in response or response["name"] != test_agent["name"]:
+                print("❌ Created agent name doesn't match input")
+                return False
+            
+            # Store the new agent ID for later tests
+            self.agent_ids.append(response["id"])
+            
+            print("✅ Agent creation validation passed")
+            return True
+        return False
+    
+    def test_memory_suggestions(self):
+        """Test memory suggestions"""
+        print("\n=== Testing Memory Suggestions ===")
+        
+        if not self.t_unit_ids or not self.agent_ids:
+            print("❌ No T-units or agents available for memory suggestions test")
+            return False
+        
+        # Use the first T-unit and agent for the test
+        t_unit_id = self.t_unit_ids[0]
+        agent_id = self.agent_ids[0] if self.agent_ids else "agent_alpha"  # Fallback to sample agent
+        
+        memory_request = {
+            "agent_id": agent_id,
+            "t_unit_id": t_unit_id,
+            "limit": 5,
+            "include_cross_agent": True,
+            "valence_weight": 0.3
+        }
+        
+        success, response = self.run_test(
+            "Get Memory Suggestions",
+            "POST",
+            "memory/suggest",
+            200,
+            data=memory_request
+        )
+        
+        if success:
+            # Validate memory suggestions
+            if not isinstance(response, list):
+                print("❌ Memory suggestions should be a list")
+                return False
+            
+            print(f"Retrieved {len(response)} memory suggestions")
+            
+            # If we have suggestions, validate their structure
             if len(response) > 0:
-                agent = response[0]
-                required_fields = ["id", "name", "description", "created_at"]
-                missing_fields = [field for field in required_fields if field not in agent]
+                suggestion = response[0]
+                required_fields = ["id", "content", "similarity", "valence_score", "final_score", "agent_id", "valence"]
+                missing_fields = [field for field in required_fields if field not in suggestion]
                 
                 if missing_fields:
-                    print(f"❌ Agent missing required fields: {missing_fields}")
+                    print(f"❌ Memory suggestion missing required fields: {missing_fields}")
                     return False
                 
-                # Store agent IDs for later tests
-                self.agent_ids = [agent["id"] for agent in response]
-                
-                print("✅ Agent structure validation passed")
+                print("✅ Memory suggestions validation passed")
+            return True
+        return False
+    
+    def test_multi_agent_exchange(self):
+        """Test multi-agent exchange"""
+        print("\n=== Testing Multi-Agent Exchange ===")
+        
+        if not self.t_unit_ids:
+            print("❌ No T-units available for multi-agent exchange test")
+            return False
+        
+        # Use sample agents if we don't have any from tests
+        source_agent_id = self.agent_ids[0] if self.agent_ids else "agent_alpha"
+        target_agent_id = self.agent_ids[1] if len(self.agent_ids) > 1 else "agent_beta"
+        
+        # Use the first T-unit for the exchange
+        t_unit_id = self.t_unit_ids[0]
+        
+        exchange_request = {
+            "source_agent_id": source_agent_id,
+            "target_agent_id": target_agent_id,
+            "t_unit_id": t_unit_id,
+            "exchange_type": "test_exchange"
+        }
+        
+        success, response = self.run_test(
+            "Multi-Agent Exchange",
+            "POST",
+            "multi-agent/exchange",
+            200,
+            data=exchange_request
+        )
+        
+        if success:
+            # Validate exchange response
+            if "message" not in response or "new_t_unit_id" not in response:
+                print("❌ Exchange response missing required fields")
+                return False
+            
+            # Store the new T-unit ID
+            if "new_t_unit_id" in response:
+                self.t_unit_ids.append(response["new_t_unit_id"])
+            
+            print("✅ Multi-agent exchange validation passed")
+            return True
+        return False
+    
+    def test_tree_structure(self):
+        """Test tree structure relationships"""
+        print("\n=== Testing Tree Structure Relationships ===")
+        
+        if len(self.t_unit_ids) < 3:
+            print("❌ Not enough T-units for tree structure test")
+            return False
+        
+        # First, create a synthesis to establish parent-child relationships
+        t_unit_ids_for_synthesis = self.t_unit_ids[:2]
+        
+        success, synthesis_response = self.run_test(
+            "Create Synthesis for Tree Structure",
+            "POST",
+            "synthesize",
+            200,
+            data={"t_unit_ids": t_unit_ids_for_synthesis, "use_ai": True}
+        )
+        
+        if not success:
+            return False
+        
+        # Get the synthesized T-unit
+        synthesized_id = synthesis_response["id"]
+        
+        # Now check if parent T-units have the synthesized T-unit as a child
+        parent_checks_passed = True
+        for parent_id in t_unit_ids_for_synthesis:
+            success, parent_response = self.run_test(
+                f"Get Parent T-Unit ({parent_id})",
+                "GET",
+                f"t-units/{parent_id}",
+                200
+            )
+            
+            if not success:
+                parent_checks_passed = False
+                continue
+            
+            # Check if the synthesized T-unit is in the parent's children
+            if "children" not in parent_response or synthesized_id not in parent_response["children"]:
+                print(f"❌ Parent T-unit {parent_id} does not have synthesized T-unit {synthesized_id} as a child")
+                parent_checks_passed = False
+            
+        # Check if the synthesized T-unit has the correct parents
+        success, synthesized_response = self.run_test(
+            f"Get Synthesized T-Unit ({synthesized_id})",
+            "GET",
+            f"t-units/{synthesized_id}",
+            200
+        )
+        
+        if not success:
+            return False
+        
+        # Check if the synthesized T-unit has the correct parents
+        if "parents" not in synthesized_response or set(synthesized_response["parents"]) != set(t_unit_ids_for_synthesis):
+            print(f"❌ Synthesized T-unit does not have correct parents")
+            return False
+        
+        if parent_checks_passed:
+            print("✅ Tree structure parent-child relationships validation passed")
             return True
         return False
         
