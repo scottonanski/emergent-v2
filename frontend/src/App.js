@@ -359,28 +359,96 @@ function App() {
     }
   }, []);
 
-  // Convert T-units to graph
+  // Convert T-units to graph with tree layout
   const convertTUnitsToGraph = useCallback((tUnits) => {
-    const graphNodes = tUnits.map((tUnit, index) => ({
-      id: tUnit.id,
+    // Build tree structure
+    const nodeMap = new Map();
+    const rootNodes = [];
+    
+    // Create node map
+    tUnits.forEach(tUnit => {
+      nodeMap.set(tUnit.id, {
+        ...tUnit,
+        children: [],
+        level: 0,
+        position: { x: 0, y: 0 }
+      });
+    });
+    
+    // Build parent-child relationships and find roots
+    tUnits.forEach(tUnit => {
+      const node = nodeMap.get(tUnit.id);
+      
+      if (tUnit.parents.length === 0) {
+        rootNodes.push(node);
+      } else {
+        // Add to parent's children
+        tUnit.parents.forEach(parentId => {
+          const parent = nodeMap.get(parentId);
+          if (parent) {
+            parent.children.push(node);
+          }
+        });
+      }
+    });
+    
+    // Calculate levels (depth from root)
+    const calculateLevels = (node, level = 0) => {
+      node.level = level;
+      node.children.forEach(child => {
+        calculateLevels(child, level + 1);
+      });
+    };
+    
+    rootNodes.forEach(root => calculateLevels(root));
+    
+    // Group nodes by level
+    const levels = new Map();
+    Array.from(nodeMap.values()).forEach(node => {
+      if (!levels.has(node.level)) {
+        levels.set(node.level, []);
+      }
+      levels.get(node.level).push(node);
+    });
+    
+    // Calculate positions for tree layout
+    const levelHeight = 200;  // Vertical spacing between levels
+    const nodeWidth = 300;    // Horizontal spacing between nodes
+    const startY = 50;        // Top margin
+    
+    // Position nodes level by level
+    levels.forEach((nodesInLevel, level) => {
+      const y = startY + (level * levelHeight);
+      const totalWidth = nodesInLevel.length * nodeWidth;
+      const startX = -totalWidth / 2;  // Center the level
+      
+      nodesInLevel.forEach((node, index) => {
+        node.position = {
+          x: startX + (index * nodeWidth) + (nodeWidth / 2),
+          y: y
+        };
+      });
+    });
+    
+    // Create React Flow nodes
+    const graphNodes = Array.from(nodeMap.values()).map(node => ({
+      id: node.id,
       type: 'tunit',
-      position: { 
-        x: (index % 5) * 280 + Math.random() * 40, 
-        y: Math.floor(index / 5) * 180 + Math.random() * 40 
-      },
+      position: node.position,
       data: {
-        content: tUnit.content,
-        valence: tUnit.valence,
-        phase: tUnit.phase,
-        linkage: tUnit.linkage,
-        timestamp: tUnit.timestamp,
-        agent_id: tUnit.agent_id,
-        ai_generated: tUnit.ai_generated,
-        is_recalled: recalledNodes.includes(tUnit.id)
+        content: node.content,
+        valence: node.valence,
+        phase: node.phase,
+        linkage: node.linkage,
+        timestamp: node.timestamp,
+        agent_id: node.agent_id,
+        ai_generated: node.ai_generated,
+        is_recalled: recalledNodes.includes(node.id)
       },
-      selected: selectedNodes.includes(tUnit.id)
+      selected: selectedNodes.includes(node.id)
     }));
 
+    // Create edges with better routing for tree layout
     const graphEdges = [];
     tUnits.forEach(tUnit => {
       tUnit.children.forEach(childId => {
@@ -390,7 +458,12 @@ function App() {
             source: tUnit.id,
             target: childId,
             label: tUnit.linkage,
-            ...edgeOptions
+            type: 'smoothstep',  // Better edge routing for trees
+            style: {
+              stroke: '#6b7280',
+              strokeWidth: 2,
+            },
+            animated: true
           });
         }
       });
