@@ -377,32 +377,32 @@ function App() {
     }
   };
 
-  // Handle transformation
-  const handleTransformation = async () => {
+  // Handle multi-agent exchange
+  const handleMultiAgentExchange = async () => {
     if (selectedNodes.length !== 1) {
-      alert('Please select exactly 1 T-unit for transformation');
+      alert('Please select exactly 1 T-unit for exchange');
       return;
     }
 
-    if (!anomalyText.trim()) {
-      alert('Please enter an anomaly description');
+    if (!selectedAgent) {
+      alert('Please select a target agent');
       return;
     }
 
     setIsLoading(true);
     try {
-      await axios.post(`${API}/transform`, {
+      await axios.post(`${API}/exchange`, {
         t_unit_id: selectedNodes[0],
-        anomaly: anomalyText,
+        target_agent_id: selectedAgent,
         use_ai: useAI
       });
       await Promise.all([fetchTUnits(), fetchEvents(), fetchAnalytics()]);
       setSelectedNodes([]);
-      setShowTransformation(false);
-      setAnomalyText('');
+      setShowMultiAgent(false);
+      setSelectedAgent('');
     } catch (error) {
-      console.error('Error during transformation:', error);
-      alert('Error during transformation');
+      console.error('Error during multi-agent exchange:', error);
+      alert('Error during multi-agent exchange');
     } finally {
       setIsLoading(false);
     }
