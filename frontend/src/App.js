@@ -238,6 +238,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('graph');
   const [useAI, setUseAI] = useState(true);
   const [showImportExport, setShowImportExport] = useState(false);
+  const [agents, setAgents] = useState([]);
 
   // Custom edge styles
   const edgeOptions = {
