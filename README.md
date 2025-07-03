@@ -66,7 +66,9 @@ you **watch thought itself unfold**.
 
 CEP-Web transforms abstract cognitive processes into living, interactive visualizations where thoughts (T-units) evolve, synthesize, and transform through AI-enhanced operations with intelligent memory recall and multi-agent collaboration.
 
-## ✨ Core Features
+---
+
+## ✨ Technical Features
 
 ### 🎯 **Intuitive User Experience**
 - **🔘 Auto-Generation Toggle**: Control automatic sample data loading - no more overwhelming data on startup
@@ -74,6 +76,7 @@ CEP-Web transforms abstract cognitive processes into living, interactive visuali
 - **✨ Create Thought**: Manual thought input with advanced valence sliders for precise emotional fingerprinting
 - **🧠 Tree Layout**: Clean hierarchical visualization showing cognitive lineage and evolution
 - **💭 Floating Memory Panel**: Elegant overlay showing semantic memory suggestions above the canvas
+- **❓ Interactive Tutorial**: Self-teaching onboarding with 3-step walkthrough and persistent help button
 
 ### 🤖 AI-Powered Cognitive Operations
 - **GPT-4 Enhanced Synthesis**: Intelligent combination of multiple T-units into coherent emergent thoughts
