@@ -257,6 +257,9 @@
         - working: true
           agent: "main"
           comment: "TREE LAYOUT ENHANCEMENT: Improved top-down tree layout with better parent-child relationship detection, increased vertical spacing (250px between levels), and more robust root node identification. Tree now clearly cascades DOWN from initial thoughts at the top with proper hierarchical flow."
+        - working: true
+          agent: "main"
+          comment: "FULL TEXT DISPLAY: Enhanced memory panel to show complete thought details when a single node is selected. Panel now displays full untruncated content, agent badges, valence scores with color-coded display, and creation timestamp. Header updated to 'Thought Details & Memory' to reflect dual functionality."
 
 ## metadata:
   created_by: "main_agent"
