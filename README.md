@@ -570,15 +570,20 @@ For questions, issues, or research collaborations:
 
 *Transforming the invisible processes of thought into interactive, visual experiences that reveal the deep structures of consciousness, memory, and recursive cognition through AI-enhanced collaborative intelligence.*
 
-## 🌟 Recent Updates (Version 2.1)
+## 🌟 Recent Updates (Version 2.2)
 
-### 🎯 **Phase 1: Core UX Improvements (Latest)**
+### 🎯 **Phase 2: Onboarding & Polish (Latest)**
+- **❓ Interactive Tutorial**: Beautiful 3-step onboarding overlay with localStorage persistence and persistent help button
+- **💭 AI Thinking Animation**: Floating bubble with rotating brain emoji and custom messages during AI operations  
+- **🎯 Smart Camera Focus**: Automatic panning and zooming to newly created thoughts with smooth 800ms animations
+- **🔧 Complete Sandbox Support**: All browser alerts replaced with custom React modals for universal compatibility
+
+### 🎯 **Phase 1: Core UX Improvements**
 - **🔘 Auto-Generation Toggle**: No more data explosion on load - clean start by default
 - **🌍 Reset World Button**: Complete data reset with beautiful confirmation modals  
-- **✨ Advanced Thought Creation**: Manual input with precise valence sliders and agent selection
+- **✨ Advanced Thought Creation**: Manual input with precise valence sliders and automatic agent creation
 - **🖱️ Manual Node Positioning**: Drag nodes to custom positions - they stay put across interactions
 - **💭 Floating Memory Panel**: Beautiful top-right overlay with gradient styling and animations
-- **🔧 Sandboxed Environment Support**: Custom React modals replace browser alerts/confirms
 
 ### 🧠 **Memory & AI Enhancements**
 - **Semantic Memory System**: Complete integration with OpenAI embeddings for intelligent recall
@@ -592,4 +597,4 @@ For questions, issues, or research collaborations:
 - **Staggered Animations**: Memory suggestions appear with elegant timing and motion
 - **Position Preservation**: Manual node positioning persists across all interactions
 
-**Version**: 2.1 - Advanced Cognitive Emergence with Intuitive UX
+**Version**: 2.2 - Complete Cognitive Emergence Platform with Self-Teaching Interface
