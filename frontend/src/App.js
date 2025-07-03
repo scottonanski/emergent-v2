@@ -1819,7 +1819,6 @@ function App() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
 
       {/* Persistent Help Button */}
       <button
