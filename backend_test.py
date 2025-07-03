@@ -590,30 +590,26 @@ class CEPWebAPITester:
         print("✅ Analytics endpoints validation passed")
         return True
         
-    def test_get_events(self):
-        """Test getting events"""
-        print("\n=== Testing Events Retrieval ===")
+    def test_genesis_export(self):
+        """Test genesis log export"""
+        print("\n=== Testing Genesis Log Export ===")
         success, response = self.run_test(
-            "Get Events",
+            "Export Genesis Log",
             "GET",
-            "events",
+            "genesis/export",
             200
         )
         
-        if success and isinstance(response, list):
-            print(f"Retrieved {len(response)} events")
+        if success:
+            # Validate genesis log structure
+            required_fields = ["t_units", "events", "agents", "exported_at", "version"]
+            missing_fields = [field for field in required_fields if field not in response]
             
-            # Validate event structure
-            if len(response) > 0:
-                event = response[0]
-                required_fields = ["id", "type", "t_unit_id", "timestamp", "metadata"]
-                missing_fields = [field for field in required_fields if field not in event]
+            if missing_fields:
+                print(f"❌ Genesis log missing required fields: {missing_fields}")
+                return False
                 
-                if missing_fields:
-                    print(f"❌ Event missing required fields: {missing_fields}")
-                    return False
-                
-                print("✅ Event structure validation passed")
+            print("✅ Genesis log export validation passed")
             return True
         return False
 
