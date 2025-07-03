@@ -508,13 +508,26 @@ For questions, issues, or research collaborations:
 
 *Transforming the invisible processes of thought into interactive, visual experiences that reveal the deep structures of consciousness, memory, and recursive cognition through AI-enhanced collaborative intelligence.*
 
-## 🌟 Recent Updates
+## 🌟 Recent Updates (Version 2.1)
 
-- **Memory System**: Complete semantic memory with OpenAI embeddings
+### 🎯 **Phase 1: Core UX Improvements (Latest)**
+- **🔘 Auto-Generation Toggle**: No more data explosion on load - clean start by default
+- **🌍 Reset World Button**: Complete data reset with beautiful confirmation modals  
+- **✨ Advanced Thought Creation**: Manual input with precise valence sliders and agent selection
+- **🖱️ Manual Node Positioning**: Drag nodes to custom positions - they stay put across interactions
+- **💭 Floating Memory Panel**: Beautiful top-right overlay with gradient styling and animations
+- **🔧 Sandboxed Environment Support**: Custom React modals replace browser alerts/confirms
+
+### 🧠 **Memory & AI Enhancements**
+- **Semantic Memory System**: Complete integration with OpenAI embeddings for intelligent recall
 - **Memory-Influenced Operations**: Past thoughts actively shape new cognitive processes  
-- **Tree Layout**: Hierarchical visualization showing cognitive lineage
-- **Multi-Agent Enhancement**: Full agent creation, exchange, and filtering
-- **Advanced Analytics**: Comprehensive cognitive statistics and timeline views
-- **Genesis Log Management**: Complete session import/export functionality
+- **Tree Layout Visualization**: Clean hierarchical structure showing cognitive lineage
+- **Multi-Agent Networks**: Full agent creation, exchange, and filtering capabilities
 
-**Version**: 2.0 - Advanced Cognitive Emergence Protocol with Semantic Memory
+### 🎨 **Visual & UX Polish**
+- **Tab-Style Node Badges**: Clean indicators for AI, agent, phase, and recall status
+- **Custom Valence Sliders**: Color-coded sliders with real-time feedback and beautiful styling
+- **Staggered Animations**: Memory suggestions appear with elegant timing and motion
+- **Position Preservation**: Manual node positioning persists across all interactions
+
+**Version**: 2.1 - Advanced Cognitive Emergence with Intuitive UX
