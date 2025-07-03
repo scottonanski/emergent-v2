@@ -158,40 +158,49 @@
           comment: "UI ENHANCEMENT: Moved memory suggestions panel from sidebar to floating overlay above the canvas. Panel now appears positioned in top-right corner with improved styling, animations, and better visual hierarchy. Enhanced with gradient headers, staggered animations, and backdrop blur effects for better UX."
 
   - task: "Phase 1: Disable Auto-Generation Toggle"
-    implemented: false
-    working: false
+    implemented: true
+    working: true
     file: "frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: false
           agent: "main"
           comment: "Starting implementation of auto-generation toggle to prevent automatic sample data loading on app startup"
+        - working: true
+          agent: "main"
+          comment: "COMPLETED: Added autoGenerateOnLoad state toggle with checkbox in header. Modified initialization logic to respect the toggle - only auto-generates sample data if enabled and no existing data found. Default is false to prevent data explosion on load."
 
   - task: "Phase 1: Reset World Button"
-    implemented: false
-    working: false
-    file: "frontend/src/App.js"
+    implemented: true
+    working: true
+    file: "frontend/src/App.js, backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: false
           agent: "main"
           comment: "Starting implementation of reset world functionality to clear all T-units, agents, and graph state"
+        - working: true
+          agent: "main"
+          comment: "COMPLETED: Added resetWorld function with confirmation dialog, red 'Reset World' button in header, and DELETE /api/reset-world endpoint that clears all database collections. Includes proper state reset and user confirmation."
 
   - task: "Phase 1: Manual Thought Input with Valence Sliders"
-    implemented: false
-    working: false
-    file: "frontend/src/App.js"
+    implemented: true
+    working: true
+    file: "frontend/src/App.js, frontend/src/App.css"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: false
           agent: "main"
           comment: "Starting implementation of advanced manual thought input with valence sliders for curiosity, certainty, and dissonance"
+        - working: true
+          agent: "main"
+          comment: "COMPLETED: Added comprehensive Create Thought modal with content textarea, agent selection dropdown, and color-coded valence sliders (curiosity=green, certainty=blue, dissonance=red). Includes custom CSS for slider styling, default values (0.6, 0.4, 0.2), and proper form validation."
 
 ## metadata:
   created_by: "main_agent"
