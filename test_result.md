@@ -186,6 +186,9 @@
         - working: true
           agent: "main"
           comment: "COMPLETED: Added resetWorld function with confirmation dialog, red 'Reset World' button in header, and DELETE /api/reset-world endpoint that clears all database collections. Includes proper state reset and user confirmation."
+        - working: true
+          agent: "main"
+          comment: "ENHANCED: Improved reset feedback with detailed success message showing what was cleared, better error handling with specific error messages, and loading state indicator on button (shows 'Resetting...' while processing). Added sample data for testing."
 
   - task: "Phase 1: Manual Thought Input with Valence Sliders"
     implemented: true
