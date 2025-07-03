@@ -1577,7 +1577,7 @@ function App() {
                   >
                     <div className="bg-gradient-to-r from-purple-500 to-blue-500 text-white p-4">
                       <div className="flex justify-between items-center">
-                        <h3 className="font-medium">💭 Memory Suggestions</h3>
+                        <h3 className="font-medium">📖 Thought Details & Memory</h3>
                         <div className="flex items-center gap-2">
                           <label className="flex items-center text-xs">
                             <input
