@@ -1312,7 +1312,11 @@ function App() {
                     className="mt-2 p-3 bg-gray-50 rounded"
                   >
                     <p className="text-sm mb-2">
-                      {useAI ? 'AI-powered transformation' : 'Basic transformation'} through 5 phases
+                      Process cognitive conflicts through 5 AI-powered phases: 
+                      <br />
+                      <span className="text-xs text-gray-600">
+                        🔥 Shattering → 🧠 Remembering → 💙 Re-feeling → 🎯 Re-centering → ✨ Becoming
+                      </span>
                       {recalledNodes.length > 0 && (
                         <span className="block text-cyan-600 text-xs mt-1">
                           💭 {recalledNodes.length} memory{recalledNodes.length > 1 ? 'ies' : 'y'} will influence this transformation
@@ -1321,10 +1325,10 @@ function App() {
                     </p>
                     <input
                       type="text"
-                      placeholder="Enter anomaly description..."
+                      placeholder="What creates tension or questions about this thought?"
                       value={anomalyText}
                       onChange={(e) => setAnomalyText(e.target.value)}
-                      className="w-full px-2 py-1 border rounded mb-2"
+                      className="w-full px-2 py-1 border rounded mb-2 text-sm"
                     />
                     <button
                       onClick={handleTransformation}
