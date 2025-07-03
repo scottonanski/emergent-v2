@@ -453,6 +453,12 @@ async def synthesize_t_units(request: SynthesisRequest):
         ai_generated=ai_generated
     )
     
+    # Generate embedding for the new T-unit
+    embedding = await generate_embedding(new_t_unit.content)
+    if embedding:
+        new_t_unit.embedding = embedding
+        new_t_unit.embedding_model = "text-embedding-ada-002"
+    
     # Update parent T-units to include this as a child
     for t_unit_id in request.t_unit_ids:
         await db.t_units.update_one(
