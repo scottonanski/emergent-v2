@@ -1599,6 +1599,79 @@ function App() {
                     </div>
                     
                     <div className="p-4">
+                      {/* Selected Node Details */}
+                      {selectedNodes.length === 1 && (
+                        <div className="mb-6">
+                          {(() => {
+                            const selectedTUnit = tUnits.find(t => t.id === selectedNodes[0]);
+                            if (!selectedTUnit) return null;
+                            
+                            return (
+                              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border border-blue-200 p-4">
+                                <div className="flex items-start justify-between mb-3">
+                                  <h4 className="font-semibold text-blue-800 flex items-center gap-2">
+                                    📖 Selected Thought Details
+                                  </h4>
+                                  <div className="flex items-center gap-2 text-xs">
+                                    {selectedTUnit.agent_id && (
+                                      <span className="bg-blue-500 text-white px-2 py-1 rounded-full">
+                                        {agents.find(a => a.id === selectedTUnit.agent_id)?.name || selectedTUnit.agent_id}
+                                      </span>
+                                    )}
+                                    {selectedTUnit.ai_generated && (
+                                      <span className="bg-purple-500 text-white px-2 py-1 rounded-full">
+                                        AI
+                                      </span>
+                                    )}
+                                    {selectedTUnit.phase && (
+                                      <span className="bg-orange-500 text-white px-2 py-1 rounded-full">
+                                        {selectedTUnit.phase}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                
+                                <div className="bg-white rounded-lg p-3 mb-3 border border-blue-100">
+                                  <p className="text-gray-800 leading-relaxed text-sm">
+                                    {selectedTUnit.content}
+                                  </p>
+                                </div>
+                                
+                                <div className="grid grid-cols-3 gap-3 text-xs">
+                                  <div className="text-center">
+                                    <div className="text-green-600 font-semibold">🧠 Curiosity</div>
+                                    <div className="text-gray-600">{(selectedTUnit.valence?.curiosity || 0).toFixed(2)}</div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="text-blue-600 font-semibold">🎯 Certainty</div>
+                                    <div className="text-gray-600">{(selectedTUnit.valence?.certainty || 0).toFixed(2)}</div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="text-red-600 font-semibold">⚡ Dissonance</div>
+                                    <div className="text-gray-600">{(selectedTUnit.valence?.dissonance || 0).toFixed(2)}</div>
+                                  </div>
+                                </div>
+                                
+                                {selectedTUnit.timestamp && (
+                                  <div className="mt-3 text-xs text-gray-500 text-center">
+                                    Created: {new Date(selectedTUnit.timestamp).toLocaleString()}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+
+                      {/* Memory Suggestions Section */}
+                      {selectedNodes.length === 1 && (
+                        <div className="border-t border-purple-100 pt-4">
+                          <h4 className="font-medium text-purple-800 mb-3 flex items-center gap-2">
+                            💭 Related Memory Suggestions
+                          </h4>
+                        </div>
+                      )}
+                      
                       {isLoadingMemory ? (
                         <div className="text-center py-8 text-purple-600">
                           <div className="animate-spin inline-block w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full mr-2"></div>
