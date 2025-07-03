@@ -392,6 +392,10 @@ function App() {
     try {
       const response = await axios.get(`${API}/agents`);
       setAgents(response.data);
+      
+      // Also fetch agents with stats for the enhanced panel
+      const statsResponse = await axios.get(`${API}/agents/stats`);
+      setAgentsWithStats(statsResponse.data);
     } catch (error) {
       console.error('Error fetching agents:', error);
     }
