@@ -102,6 +102,38 @@ class CEPWebAPITester:
                 print("✅ T-unit structure validation passed")
             return True
         return False
+        
+    def test_get_t_units_by_agent(self):
+        """Test getting T-units filtered by agent"""
+        print("\n=== Testing T-Units Retrieval by Agent ===")
+        
+        if not self.agent_ids:
+            print("❌ No agents available for T-unit filtering test")
+            return False
+        
+        # Use the first agent for the filtering test
+        agent_id = self.agent_ids[0]
+        
+        success, response = self.run_test(
+            f"Get T-Units by Agent ({agent_id})",
+            "GET",
+            f"t-units?agent_id={agent_id}",
+            200
+        )
+        
+        if success and isinstance(response, list):
+            print(f"Retrieved {len(response)} T-units for agent {agent_id}")
+            
+            # Validate that all T-units belong to the specified agent
+            if len(response) > 0:
+                for t_unit in response:
+                    if "agent_id" not in t_unit or t_unit["agent_id"] != agent_id:
+                        print(f"❌ T-unit {t_unit.get('id')} doesn't belong to agent {agent_id}")
+                        return False
+                
+                print("✅ T-unit filtering by agent validation passed")
+            return True
+        return False
 
     def test_synthesize(self):
         """Test synthesizing T-units"""
