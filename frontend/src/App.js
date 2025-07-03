@@ -740,27 +740,38 @@ function App() {
   // Handle transformation
   const handleTransformation = async () => {
     if (selectedNodes.length !== 1) {
-      alert('Please select exactly 1 T-unit for transformation');
+      setErrorMessage('Please select exactly 1 T-unit for transformation');
+      setShowErrorMessage(true);
       return;
     }
 
     if (!anomalyText.trim()) {
-      alert('Please enter an anomaly description');
+      setErrorMessage('Please enter an anomaly description');
+      setShowErrorMessage(true);
       return;
     }
 
     setIsLoading(true);
+    startThinking('AI is transforming through cognitive phases...');
+    
     try {
       // Get recalled nodes (excluding the target transformation node)
       const targetNode = selectedNodes[0];
       const recalledForTransformation = recalledNodes.filter(id => id !== targetNode);
       
-      await axios.post(`${API}/transform`, {
+      const response = await axios.post(`${API}/transform`, {
         t_unit_id: targetNode,
         anomaly: anomalyText,
         recalled_ids: recalledForTransformation,
         use_ai: useAI
       });
+      
+      // Focus on the first transformation node (Shattering phase)
+      const newNodes = response.data;
+      if (newNodes && newNodes.length > 0) {
+        setTimeout(() => focusOnNode(newNodes[0].id), 200);
+      }
+      
       await Promise.all([fetchTUnits(), fetchEvents(), fetchAnalytics()]);
       setSelectedNodes([]);
       setRecalledNodes([]);
@@ -768,9 +779,11 @@ function App() {
       setAnomalyText('');
     } catch (error) {
       console.error('Error during transformation:', error);
-      alert('Error during transformation');
+      setErrorMessage('Error during transformation. Please try again.');
+      setShowErrorMessage(true);
     } finally {
       setIsLoading(false);
+      stopThinking();
     }
   };
 
