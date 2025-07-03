@@ -440,12 +440,18 @@ function App() {
 
     setIsLoading(true);
     try {
+      // Separate recalled nodes from regular selection
+      const recalledInSelection = selectedNodes.filter(id => recalledNodes.includes(id));
+      const regularSelection = selectedNodes.filter(id => !recalledNodes.includes(id));
+      
       await axios.post(`${API}/synthesize`, {
-        t_unit_ids: selectedNodes,
+        t_unit_ids: regularSelection.length >= 2 ? regularSelection : selectedNodes,
+        recalled_ids: recalledInSelection,
         use_ai: useAI
       });
       await Promise.all([fetchTUnits(), fetchEvents(), fetchAnalytics()]);
       setSelectedNodes([]);
+      setRecalledNodes([]);
       setShowSynthesis(false);
     } catch (error) {
       console.error('Error during synthesis:', error);
