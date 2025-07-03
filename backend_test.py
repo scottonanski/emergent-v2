@@ -103,15 +103,15 @@ class CEPWebAPITester:
             print("❌ Not enough T-units for synthesis test")
             return False
         
-        # Select 3 T-units for synthesis
+        # Test with AI synthesis
         t_unit_ids_for_synthesis = self.t_unit_ids[:3]
         
         success, response = self.run_test(
-            "Synthesize T-Units",
+            "Synthesize T-Units with AI",
             "POST",
             "synthesize",
             200,
-            data={"t_unit_ids": t_unit_ids_for_synthesis}
+            data={"t_unit_ids": t_unit_ids_for_synthesis, "use_ai": True}
         )
         
         if success:
@@ -120,18 +120,45 @@ class CEPWebAPITester:
                 print("❌ Synthesis response missing ID")
                 return False
             
-            if "content" not in response or not response["content"].startswith("SYNTHESIS:"):
-                print("❌ Synthesis content not properly formatted")
+            if "content" not in response:
+                print("❌ Synthesis content missing")
                 return False
             
             if "parents" not in response or set(response["parents"]) != set(t_unit_ids_for_synthesis):
                 print("❌ Synthesis parents don't match input T-units")
                 return False
             
-            print("✅ Synthesis validation passed")
+            # Check AI generation flag
+            if "ai_generated" not in response or not response["ai_generated"]:
+                print("❌ AI-generated flag not set correctly")
+                return False
+            
+            print("✅ AI Synthesis validation passed")
             # Add the new T-unit ID to our list
             self.t_unit_ids.append(response["id"])
-            return True
+            
+            # Now test without AI
+            success, response = self.run_test(
+                "Synthesize T-Units without AI",
+                "POST",
+                "synthesize",
+                200,
+                data={"t_unit_ids": t_unit_ids_for_synthesis, "use_ai": False}
+            )
+            
+            if success:
+                # Check that content starts with SYNTHESIS for non-AI synthesis
+                if "content" not in response or not response["content"].startswith("SYNTHESIS:"):
+                    print("❌ Non-AI synthesis content not properly formatted")
+                    return False
+                
+                # Check AI generation flag is false
+                if "ai_generated" not in response or response["ai_generated"]:
+                    print("❌ AI-generated flag should be false for non-AI synthesis")
+                    return False
+                
+                print("✅ Non-AI Synthesis validation passed")
+                return True
         return False
 
     def test_transformation(self):
