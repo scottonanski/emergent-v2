@@ -147,6 +147,9 @@
         - working: true
           agent: "main"
           comment: "FIXED: Applied the identified fix by modifying the edge creation code to use the populated node.children arrays from nodeMap instead of the empty tUnit.children arrays from API data. The edge creation now iterates through nodeMap.values() and uses node.children arrays that were properly built during parent-child relationship construction."
+        - working: true
+          agent: "main"
+          comment: "ADDITIONAL FIX: Resolved manual node positioning issue. When users manually move a tree node and then click another node, the tree no longer resets positions. Implemented position preservation by tracking hasManualPosition flag and only recalculating positions for non-manually-moved nodes. Added custom handleNodesChange handler and resetTreeLayout button for user control."
 
 ## metadata:
   created_by: "main_agent"
