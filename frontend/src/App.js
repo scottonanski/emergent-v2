@@ -1027,7 +1027,7 @@ function App() {
   useEffect(() => {
     const initializeApp = async () => {
       // Always fetch existing data
-      await Promise.all([fetchTUnits(), fetchEvents(), fetchAgents(), fetchAnalytics()]);
+      await Promise.all([fetchTUnits(), fetchEvents(), fetchAgents(), fetchAgentsWithStats(), fetchAnalytics()]);
       
       // Auto-generate sample data only if enabled and no data exists
       if (autoGenerateOnLoad) {
@@ -1045,7 +1045,7 @@ function App() {
     };
     
     initializeApp();
-  }, [fetchTUnits, fetchEvents, fetchAgents, fetchAnalytics, autoGenerateOnLoad]);
+  }, [fetchTUnits, fetchEvents, fetchAgents, fetchAgentsWithStats, fetchAnalytics, autoGenerateOnLoad]);
 
   // Update graph when T-units change
   useEffect(() => {
