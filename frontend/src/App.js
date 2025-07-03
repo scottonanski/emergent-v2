@@ -360,18 +360,20 @@ function App() {
   }, []);
 
   // Convert T-units to graph with tree layout
-  const convertTUnitsToGraph = useCallback((tUnits) => {
+  const convertTUnitsToGraph = useCallback((tUnits, preservePositions = false) => {
     // Build tree structure
     const nodeMap = new Map();
     const rootNodes = [];
     
-    // Create node map
+    // Create node map, preserving existing positions if requested
     tUnits.forEach(tUnit => {
+      const existingNode = preservePositions ? nodes.find(n => n.id === tUnit.id) : null;
       nodeMap.set(tUnit.id, {
         ...tUnit,
         children: [],
         level: 0,
-        position: { x: 0, y: 0 }
+        position: existingNode ? existingNode.position : { x: 0, y: 0 },
+        hasManualPosition: existingNode ? existingNode.data?.hasManualPosition : false
       });
     });
     
@@ -411,7 +413,7 @@ function App() {
       levels.get(node.level).push(node);
     });
     
-    // Calculate positions for tree layout
+    // Calculate positions for tree layout (only for nodes without manual positions)
     const levelHeight = 200;  // Vertical spacing between levels
     const nodeWidth = 300;    // Horizontal spacing between nodes
     const startY = 50;        // Top margin
@@ -423,10 +425,13 @@ function App() {
       const startX = -totalWidth / 2;  // Center the level
       
       nodesInLevel.forEach((node, index) => {
-        node.position = {
-          x: startX + (index * nodeWidth) + (nodeWidth / 2),
-          y: y
-        };
+        // Only update position if node doesn't have a manual position
+        if (!node.hasManualPosition) {
+          node.position = {
+            x: startX + (index * nodeWidth) + (nodeWidth / 2),
+            y: y
+          };
+        }
       });
     });
     
@@ -443,7 +448,8 @@ function App() {
         timestamp: node.timestamp,
         agent_id: node.agent_id,
         ai_generated: node.ai_generated,
-        is_recalled: recalledNodes.includes(node.id)
+        is_recalled: recalledNodes.includes(node.id),
+        hasManualPosition: node.hasManualPosition
       },
       selected: selectedNodes.includes(node.id)
     }));
@@ -469,7 +475,7 @@ function App() {
 
     setNodes(graphNodes);
     setEdges(graphEdges);
-  }, [selectedNodes, recalledNodes, setNodes, setEdges]);
+  }, [selectedNodes, recalledNodes, setNodes, setEdges, nodes]);
 
   // Initialize sample data
   const initSampleData = async () => {
