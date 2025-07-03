@@ -1533,23 +1533,23 @@ function App() {
             </div>
 
             {/* Enhanced Agent Panel */}
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="font-medium text-gray-800">🤖 Cognitive Agents</h3>
+            <div className="max-h-96 flex flex-col">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-medium text-gray-800 text-sm">🤖 Cognitive Agents</h3>
                 <button
                   onClick={() => setShowAgentCreation(!showAgentCreation)}
-                  className="text-xs px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full hover:shadow-lg transition-all"
+                  className="text-xs px-2 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full hover:shadow-lg transition-all"
                 >
-                  ✨ New Agent
+                  ✨ New
                 </button>
               </div>
 
               {/* Agent Filter Chips */}
-              <div className="mb-4">
+              <div className="mb-3">
                 <div className="flex flex-wrap gap-1">
                   <button
                     onClick={() => handleToggleAgentFilter('all')}
-                    className={`px-3 py-1 text-xs rounded-full transition-all ${
+                    className={`px-2 py-1 text-xs rounded-full transition-all ${
                       agentFilters.includes('all')
                         ? 'bg-gray-800 text-white shadow-md'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -1557,11 +1557,11 @@ function App() {
                   >
                     🌐 All
                   </button>
-                  {agentsWithStats.map(agent => (
+                  {agentsWithStats.slice(0, 4).map(agent => (
                     <button
                       key={agent.id}
                       onClick={() => handleToggleAgentFilter(agent.id)}
-                      className={`px-3 py-1 text-xs rounded-full transition-all flex items-center gap-1 ${
+                      className={`px-2 py-1 text-xs rounded-full transition-all flex items-center gap-1 ${
                         agentFilters.includes(agent.id)
                           ? 'text-white shadow-md'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -1570,41 +1570,46 @@ function App() {
                         backgroundColor: agentFilters.includes(agent.id) ? agent.color : undefined
                       }}
                     >
-                      <span>{agent.avatar}</span>
-                      <span>{agent.name}</span>
-                      <span className="bg-white bg-opacity-20 rounded-full px-1">
+                      <span className="text-xs">{agent.avatar}</span>
+                      <span className="max-w-12 truncate">{agent.name}</span>
+                      <span className="bg-white bg-opacity-20 rounded-full px-1 text-xs">
                         {agent.thought_count}
                       </span>
                     </button>
                   ))}
+                  {agentsWithStats.length > 4 && (
+                    <span className="text-xs text-gray-500 px-2 py-1">
+                      +{agentsWithStats.length - 4} more
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* Agent Cards */}
-              <div className="space-y-3 max-h-80 overflow-y-auto">
+              {/* Agent Cards - Compact scrollable */}
+              <div className="flex-1 overflow-y-auto space-y-2">
                 {agentsWithStats.map(agent => (
                   <motion.div
                     key={agent.id}
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200 p-3 hover:shadow-md transition-all"
+                    className="bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200 p-2 hover:shadow-md transition-all"
                   >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
                         <div 
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                          className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
                           style={{ backgroundColor: agent.color }}
                         >
                           {agent.avatar}
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           {editingAgent === agent.id ? (
                             <div className="flex items-center gap-1">
                               <input
                                 type="text"
                                 value={editingAgentName}
                                 onChange={(e) => setEditingAgentName(e.target.value)}
-                                className="text-sm font-medium border border-gray-300 rounded px-2 py-1 w-24"
+                                className="text-xs font-medium border border-gray-300 rounded px-1 py-0.5 w-20"
                                 onKeyPress={(e) => e.key === 'Enter' && handleSaveAgentEdit(agent.id)}
                                 autoFocus
                               />
@@ -1622,32 +1627,34 @@ function App() {
                               </button>
                             </div>
                           ) : (
-                            <div className="font-medium text-gray-800 text-sm">{agent.name}</div>
+                            <div>
+                              <div className="font-medium text-gray-800 text-xs truncate">{agent.name}</div>
+                              <div className="text-xs text-gray-500 truncate">{agent.description}</div>
+                            </div>
                           )}
-                          <div className="text-xs text-gray-500">{agent.description}</div>
                         </div>
                       </div>
                       
                       {editingAgent !== agent.id && (
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-0.5 flex-shrink-0">
                           <button
                             onClick={() => handleFocusAgent(agent.id)}
-                            className="text-blue-500 hover:text-blue-700 text-xs p-1 rounded hover:bg-blue-50"
-                            title="Focus on this agent"
+                            className="text-blue-500 hover:text-blue-700 text-xs p-0.5 rounded hover:bg-blue-50"
+                            title="Focus"
                           >
                             🎯
                           </button>
                           <button
                             onClick={() => handleEditAgent(agent)}
-                            className="text-gray-500 hover:text-gray-700 text-xs p-1 rounded hover:bg-gray-100"
-                            title="Rename agent"
+                            className="text-gray-500 hover:text-gray-700 text-xs p-0.5 rounded hover:bg-gray-100"
+                            title="Rename"
                           >
                             ✏️
                           </button>
                           <button
                             onClick={() => handleDeleteAgent(agent.id, agent.name)}
-                            className="text-red-500 hover:text-red-700 text-xs p-1 rounded hover:bg-red-50"
-                            title="Delete agent"
+                            className="text-red-500 hover:text-red-700 text-xs p-0.5 rounded hover:bg-red-50"
+                            title="Delete"
                           >
                             🗑️
                           </button>
@@ -1655,22 +1662,22 @@ function App() {
                       )}
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div className="grid grid-cols-3 gap-1 text-xs">
                       <div className="text-center">
-                        <div className="font-semibold text-gray-600">{agent.thought_count}</div>
-                        <div className="text-gray-400">Thoughts</div>
+                        <div className="font-semibold text-gray-600 text-xs">{agent.thought_count}</div>
+                        <div className="text-gray-400 text-xs">Thoughts</div>
                       </div>
                       <div className="text-center">
-                        <div className="font-semibold text-gray-600">
-                          {new Date(agent.created_at).toLocaleDateString()}
+                        <div className="font-semibold text-gray-600 text-xs">
+                          {new Date(agent.created_at).toLocaleDateString('en', {month: 'short', day: 'numeric'})}
                         </div>
-                        <div className="text-gray-400">Created</div>
+                        <div className="text-gray-400 text-xs">Created</div>
                       </div>
                       <div className="text-center">
-                        <div className="font-semibold text-gray-600">
-                          {agent.last_activity ? new Date(agent.last_activity).toLocaleDateString() : 'Never'}
+                        <div className="font-semibold text-gray-600 text-xs">
+                          {agent.last_activity ? new Date(agent.last_activity).toLocaleDateString('en', {month: 'short', day: 'numeric'}) : 'Never'}
                         </div>
-                        <div className="text-gray-400">Last Active</div>
+                        <div className="text-gray-400 text-xs">Active</div>
                       </div>
                     </div>
                   </motion.div>
