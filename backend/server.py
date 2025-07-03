@@ -69,6 +69,7 @@ class TransformationRequest(BaseModel):
     t_unit_id: str = Field(description="T-unit ID to transform")
     anomaly: str = Field(description="Anomaly string to trigger transformation")
     use_ai: bool = Field(default=True, description="Use AI for intelligent transformation")
+    recalled_ids: List[str] = Field(default=[], description="IDs of T-units that were recalled from memory")
 
 class Event(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
