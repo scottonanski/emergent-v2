@@ -582,6 +582,43 @@ async def suggest_memories(request: MemorySuggestRequest):
     
     return suggestions
 
+@api_router.post("/multi-agent/exchange")
+async def multi_agent_exchange(exchange: MultiAgentExchange):
+    """Exchange T-units between agents"""
+    # Get the T-unit to exchange
+    t_unit_doc = await db.t_units.find_one({"id": exchange.t_unit_id})
+    if not t_unit_doc:
+        raise HTTPException(status_code=404, detail="T-unit not found")
+    
+    original_t_unit = TUnit(**t_unit_doc)
+    
+    # Create a copy for the target agent
+    exchanged_t_unit = TUnit(
+        content=f"[RECEIVED] {original_t_unit.content}",
+        valence=original_t_unit.valence,
+        parents=[original_t_unit.id],
+        linkage="exchanged",
+        agent_id=exchange.target_agent_id
+    )
+    
+    await db.t_units.insert_one(exchanged_t_unit.dict())
+    
+    # Log exchange event
+    event = Event(
+        type="multi_agent_exchange",
+        t_unit_id=exchanged_t_unit.id,
+        metadata={
+            "source_agent": exchange.source_agent_id,
+            "target_agent": exchange.target_agent_id,
+            "original_t_unit": exchange.t_unit_id,
+            "exchange_type": exchange.exchange_type
+        },
+        agent_id=exchange.target_agent_id
+    )
+    await db.events.insert_one(event.dict())
+    
+    return {"message": "T-unit exchanged successfully", "new_t_unit_id": exchanged_t_unit.id}
+
 @api_router.post("/genesis/import")
 async def import_genesis_log(file: UploadFile = File(...)):
     """Import genesis log data from file"""
