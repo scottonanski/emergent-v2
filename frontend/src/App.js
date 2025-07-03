@@ -696,8 +696,22 @@ function App() {
 
   // Update graph when T-units change
   useEffect(() => {
-    convertTUnitsToGraph(tUnits);
-  }, [tUnits, convertTUnitsToGraph]);
+    convertTUnitsToGraph(tUnits, false); // false = don't preserve positions, recalculate tree
+  }, [tUnits]);
+
+  // Update node selection and recalled status without recalculating layout
+  useEffect(() => {
+    setNodes(currentNodes => 
+      currentNodes.map(node => ({
+        ...node,
+        data: {
+          ...node.data,
+          is_recalled: recalledNodes.includes(node.id)
+        },
+        selected: selectedNodes.includes(node.id)
+      }))
+    );
+  }, [selectedNodes, recalledNodes, setNodes]);
 
   const onConnect = useCallback((params) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
 
