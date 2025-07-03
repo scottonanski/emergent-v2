@@ -12,6 +12,7 @@ import uuid
 from datetime import datetime
 import json
 import asyncio
+import numpy as np
 from openai import OpenAI
 
 ROOT_DIR = Path(__file__).parent
