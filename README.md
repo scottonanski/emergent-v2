@@ -48,28 +48,32 @@ CEP-Web transforms abstract cognitive processes into living, interactive visuali
 
 ### 📊 State Management & Persistence
 - **Genesis Log Export/Import**: Save and restore complete cognitive sessions as JSON
-- **Real-time State Synchronization**: Live updates across all visualizations
+- **Real-time State Synchronization**: Live updates across all visualizations  
 - **Memory Event Tracking**: Complete audit trail of memory-influenced operations
 - **Cross-Session Continuity**: Resume cognitive modeling from previous states
+- **Reset World**: Complete data reset with confirmation for fresh starts
+- **Auto-Save Preferences**: Remember user settings like auto-generation toggle
 
 ## 🏗️ Architecture
 
 ### Tech Stack
 - **Frontend**: React 19, TypeScript, React Flow, D3.js, Tailwind CSS, Framer Motion
-- **Backend**: FastAPI, Python 3.11+, OpenAI GPT-4 API
+- **Backend**: FastAPI, Python 3.11+, OpenAI GPT-4 API  
 - **Database**: MongoDB with Motor async driver
-- **Visualization**: React Flow (graphs), D3.js (charts), Recharts (analytics)
+- **Visualization**: React Flow (interactive graphs), D3.js (charts), Recharts (analytics)
 - **AI Integration**: OpenAI GPT-4 for content generation and text-embedding-ada-002 for semantic similarity
+- **UI/UX**: Custom modals for sandboxed environments, advanced valence sliders, floating panels
 
 ### System Design
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   React Frontend │    │  FastAPI Backend │    │   MongoDB Store │
 │                 │    │                 │    │                 │
-│ • Graph Vis     │◄──►│ • T-unit CRUD   │◄──►│ • T-units       │
+│ • Tree Layout   │◄──►│ • T-unit CRUD   │◄──►│ • T-units       │
 │ • Memory Panel  │    │ • AI Operations │    │ • Events        │
-│ • Analytics     │    │ • Memory System │    │ • Agents        │
-│ • Timeline      │    │ • Multi-Agent   │    │ • Embeddings    │
+│ • Custom Modals │    │ • Memory System │    │ • Agents        │
+│ • Valence UI    │    │ • Multi-Agent   │    │ • Embeddings    │
+│ • Manual Input  │    │ • Reset World   │    │ • Analytics     │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                               │
                               ▼
@@ -81,6 +85,13 @@ CEP-Web transforms abstract cognitive processes into living, interactive visuali
                     │ • Memory        │
                     └─────────────────┘
 ```
+
+### Key Design Principles
+- **Sandboxed Environment Support**: Custom React modals instead of browser alerts/confirms
+- **Position Preservation**: Manual node positioning persists across interactions
+- **Memory-First Design**: Semantic memory is central to all cognitive operations
+- **Intuitive UX**: Clean, discoverable interface with helpful defaults
+- **Tree Structure**: Hierarchical layout reveals cognitive lineage clearly
 
 ## 🚀 Quick Start
 
