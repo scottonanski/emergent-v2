@@ -1601,6 +1601,114 @@ function App() {
           )}
         </div>
       </div>
+
+      {/* Custom Reset Confirmation Modal */}
+      <AnimatePresence>
+        {showResetConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-lg shadow-2xl p-6 w-96 max-w-[90vw]"
+            >
+              <div className="text-center">
+                <div className="text-4xl mb-4">⚠️</div>
+                <h2 className="text-xl font-bold text-red-800 mb-4">Reset World</h2>
+                <p className="text-gray-700 mb-6">
+                  Are you sure you want to reset the entire world? 
+                  This will delete all thoughts, agents, and events.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleConfirmedReset}
+                    className="flex-1 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    Yes, Reset World
+                  </button>
+                  <button
+                    onClick={() => setShowResetConfirm(false)}
+                    className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Custom Success Message Modal */}
+      <AnimatePresence>
+        {showSuccessMessage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-lg shadow-2xl p-6 w-96 max-w-[90vw]"
+            >
+              <div className="text-center">
+                <div className="text-4xl mb-4">✅</div>
+                <h2 className="text-xl font-bold text-green-800 mb-4">Success!</h2>
+                <p className="text-gray-700 mb-6 whitespace-pre-line">
+                  {successMessage}
+                </p>
+                <button
+                  onClick={() => setShowSuccessMessage(false)}
+                  className="px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                >
+                  OK
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Custom Error Message Modal */}
+      <AnimatePresence>
+        {showErrorMessage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-lg shadow-2xl p-6 w-96 max-w-[90vw]"
+            >
+              <div className="text-center">
+                <div className="text-4xl mb-4">❌</div>
+                <h2 className="text-xl font-bold text-red-800 mb-4">Error</h2>
+                <p className="text-gray-700 mb-6 whitespace-pre-line">
+                  {errorMessage}
+                </p>
+                <button
+                  onClick={() => setShowErrorMessage(false)}
+                  className="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                  OK
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
