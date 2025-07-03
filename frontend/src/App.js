@@ -405,11 +405,22 @@ function App() {
 
   // Handle node selection
   const onNodeClick = (event, node) => {
-    setSelectedNodes(prev => 
-      prev.includes(node.id) 
-        ? prev.filter(id => id !== node.id)
-        : [...prev, node.id]
-    );
+    const newSelection = selectedNodes.includes(node.id) 
+      ? selectedNodes.filter(id => id !== node.id)
+      : [...selectedNodes, node.id];
+    
+    setSelectedNodes(newSelection);
+    
+    // Trigger memory suggestions if exactly one node is selected
+    if (newSelection.length === 1) {
+      const selectedTUnit = tUnits.find(t => t.id === newSelection[0]);
+      if (selectedTUnit) {
+        fetchMemorySuggestions(selectedTUnit.id, selectedTUnit.agent_id);
+      }
+    } else {
+      setShowMemoryPanel(false);
+      setMemorySuggestions([]);
+    }
   };
 
   // Handle synthesis
