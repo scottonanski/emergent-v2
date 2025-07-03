@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-## user_problem_statement: "Phase 1: Core UX Fixes - Disable auto-generation toggle, Reset World button, and Manual Thought Input with valence sliders to make Emergent V2 immediately usable and intuitive"
+## user_problem_statement: "Phase 2: Onboarding & Polish - Tutorial overlay, AI thinking animation, and smart camera focus to make the platform self-teaching and build user trust/immersion"
 
 ## backend:
   - task: "Backend API - All endpoints working"
