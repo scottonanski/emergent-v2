@@ -265,6 +265,17 @@ function App() {
   const [includeCrossAgent, setIncludeCrossAgent] = useState(false);
   const [recalledNodes, setRecalledNodes] = useState([]);
 
+  // Phase 1: Core UX Features State
+  const [autoGenerateOnLoad, setAutoGenerateOnLoad] = useState(false);
+  const [showCreateThought, setShowCreateThought] = useState(false);
+  const [newThoughtContent, setNewThoughtContent] = useState('');
+  const [newThoughtAgent, setNewThoughtAgent] = useState('');
+  const [newThoughtValence, setNewThoughtValence] = useState({
+    curiosity: 0.6,
+    certainty: 0.4,
+    dissonance: 0.2
+  });
+
   // Reset tree layout (remove manual positioning)
   const resetTreeLayout = useCallback(() => {
     convertTUnitsToGraph(tUnits, false);
