@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-## user_problem_statement: "Tree Layout Restructuring - Convert the current graph from a jumbled mess to a clear tree formation that reveals cognitive structure and evolution"
+## user_problem_statement: "Phase 1: Core UX Fixes - Disable auto-generation toggle, Reset World button, and Manual Thought Input with valence sliders to make Emergent V2 immediately usable and intuitive"
 
 ## backend:
   - task: "Backend API - All endpoints working"
