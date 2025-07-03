@@ -74,8 +74,15 @@ const TUnitNode = ({ data }) => {
           </div>
         )}
         
+        {/* Recalled Tab */}
+        {data.is_recalled && (
+          <div className="bg-cyan-500 text-white text-xs px-2 py-1 rounded-t-md ml-auto">
+            RECALLED
+          </div>
+        )}
+        
         {/* Fill remaining space if no tabs */}
-        {!data.agent_id && !data.ai_generated && !data.phase && !data.content?.startsWith('[RECEIVED]') && (
+        {!data.agent_id && !data.ai_generated && !data.phase && !data.content?.startsWith('[RECEIVED]') && !data.is_recalled && (
           <div className="flex-1 bg-gray-100 text-xs px-2 py-1">
             T-Unit
           </div>
