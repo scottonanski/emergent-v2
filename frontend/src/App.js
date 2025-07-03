@@ -899,10 +899,12 @@ function App() {
       });
       
       await Promise.all([fetchTUnits(), fetchEvents(), fetchAgents(), fetchAnalytics()]);
-      alert('Genesis log imported successfully!');
+      setSuccessMessage('Genesis log imported successfully!');
+      setShowSuccessMessage(true);
     } catch (error) {
       console.error('Error importing data:', error);
-      alert('Error importing data');
+      setErrorMessage('Error importing data');
+      setShowErrorMessage(true);
     } finally {
       setIsLoading(false);
       event.target.value = '';
