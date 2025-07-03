@@ -2478,17 +2478,46 @@ function App() {
               className="bg-white rounded-lg shadow-2xl p-6 w-96 max-w-[90vw]"
             >
               <div className="text-center">
-                <div className="text-4xl mb-4">❌</div>
-                <h2 className="text-xl font-bold text-red-800 mb-4">Error</h2>
+                <div className="text-4xl mb-4">
+                  {window.pendingAgentDelete ? '⚠️' : '❌'}
+                </div>
+                <h2 className="text-xl font-bold text-red-800 mb-4">
+                  {window.pendingAgentDelete ? 'Confirm Delete' : 'Error'}
+                </h2>
                 <p className="text-gray-700 mb-6 whitespace-pre-line">
                   {errorMessage}
                 </p>
-                <button
-                  onClick={() => setShowErrorMessage(false)}
-                  className="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                >
-                  OK
-                </button>
+                <div className="flex gap-3">
+                  {window.pendingAgentDelete ? (
+                    <>
+                      <button
+                        onClick={() => {
+                          handleConfirmDeleteAgent();
+                          setShowErrorMessage(false);
+                        }}
+                        className="flex-1 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                      >
+                        Yes, Delete
+                      </button>
+                      <button
+                        onClick={() => {
+                          delete window.pendingAgentDelete;
+                          setShowErrorMessage(false);
+                        }}
+                        className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => setShowErrorMessage(false)}
+                      className="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                    >
+                      OK
+                    </button>
+                  )}
+                </div>
               </div>
             </motion.div>
           </motion.div>
