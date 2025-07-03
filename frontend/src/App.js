@@ -301,8 +301,8 @@ function App() {
     }
   }, []);
 
-  // Mark tutorial as completed
-  const completeTutorial = () => {
+  // Phase 3: Agents Panel State
+  const [showAgentsPanel, setShowAgentsPanel] = useState(true);
     localStorage.setItem('hasSeenOnboarding', 'true');
     setShowTutorial(false);
     setTutorialStep(1);
