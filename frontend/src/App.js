@@ -507,6 +507,84 @@ function App() {
     setEdges(graphEdges);
   }, [selectedNodes, recalledNodes, setNodes, setEdges]);
 
+  // Reset World functionality
+  const resetWorld = useCallback(async () => {
+    if (!window.confirm('Are you sure you want to reset the entire world? This will delete all thoughts, agents, and events.')) {
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      // Clear database
+      await axios.delete(`${API}/reset-world`);
+      
+      // Reset local state
+      setTUnits([]);
+      setEvents([]);
+      setAgents([]);
+      setSelectedNodes([]);
+      setRecalledNodes([]);
+      setNodes([]);
+      setEdges([]);
+      setMemorySuggestions([]);
+      setShowMemoryPanel(false);
+      
+      // Clear analytics
+      setValenceData([]);
+      setTimelineData([]);
+      
+      alert('World reset successfully!');
+    } catch (error) {
+      console.error('Error resetting world:', error);
+      alert('Error resetting world. Check console for details.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [setNodes, setEdges]);
+
+  // Create manual thought
+  const createManualThought = async () => {
+    if (!newThoughtContent.trim()) {
+      alert('Please enter thought content');
+      return;
+    }
+
+    if (!newThoughtAgent) {
+      alert('Please select an agent');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await axios.post(`${API}/t-units`, {
+        content: newThoughtContent,
+        valence: newThoughtValence,
+        agent_id: newThoughtAgent,
+        linkage: 'manual'
+      });
+      
+      // Refresh data
+      await Promise.all([fetchTUnits(), fetchEvents(), fetchAnalytics()]);
+      
+      // Reset form
+      setNewThoughtContent('');
+      setNewThoughtAgent('');
+      setNewThoughtValence({
+        curiosity: 0.6,
+        certainty: 0.4,
+        dissonance: 0.2
+      });
+      setShowCreateThought(false);
+      
+      alert('Thought created successfully!');
+    } catch (error) {
+      console.error('Error creating thought:', error);
+      alert('Error creating thought');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Initialize sample data
   const initSampleData = async () => {
     setIsLoading(true);
