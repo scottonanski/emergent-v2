@@ -400,6 +400,105 @@ function App() {
     }
   }, []);
 
+  // Fetch agents with statistics
+  const fetchAgentsWithStats = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API}/agents/stats`);
+      setAgentsWithStats(response.data);
+    } catch (error) {
+      console.error('Error fetching agents with stats:', error);
+    }
+  }, []);
+
+  // Enhanced Agent Management Functions
+  const handleToggleAgentFilter = (agentId) => {
+    if (agentId === 'all') {
+      setAgentFilters(['all']);
+      setSelectedAgentFilter('');
+    } else {
+      setAgentFilters(prev => {
+        const newFilters = prev.includes(agentId) 
+          ? prev.filter(id => id !== agentId)
+          : [...prev.filter(id => id !== 'all'), agentId];
+        
+        // Update global agent filter for backward compatibility
+        setSelectedAgentFilter(newFilters.length === 1 ? newFilters[0] : '');
+        
+        return newFilters.length === 0 ? ['all'] : newFilters;
+      });
+    }
+  };
+
+  const handleEditAgent = (agent) => {
+    setEditingAgent(agent.id);
+    setEditingAgentName(agent.name);
+  };
+
+  const handleSaveAgentEdit = async (agentId) => {
+    if (!editingAgentName.trim()) return;
+    
+    try {
+      await axios.put(`${API}/agents/${agentId}`, {
+        name: editingAgentName.trim()
+      });
+      await fetchAgentsWithStats();
+      setEditingAgent(null);
+      setEditingAgentName('');
+      setSuccessMessage('Agent renamed successfully!');
+      setShowSuccessMessage(true);
+    } catch (error) {
+      console.error('Error renaming agent:', error);
+      setErrorMessage('Error renaming agent');
+      setShowErrorMessage(true);
+    }
+  };
+
+  const handleCancelAgentEdit = () => {
+    setEditingAgent(null);
+    setEditingAgentName('');
+  };
+
+  const handleDeleteAgent = (agentId, agentName) => {
+    // Use custom modal for confirmation
+    setErrorMessage(`Are you sure you want to delete agent "${agentName}"?\n\nThis will remove the agent but keep all their thoughts in the system.`);
+    setShowErrorMessage(true);
+    
+    // Store delete info for confirmation
+    window.pendingAgentDelete = { agentId, agentName };
+  };
+
+  const handleConfirmDeleteAgent = async () => {
+    if (!window.pendingAgentDelete) return;
+    
+    const { agentId, agentName } = window.pendingAgentDelete;
+    
+    try {
+      await axios.delete(`${API}/agents/${agentId}`);
+      await fetchAgentsWithStats();
+      
+      // Remove from filters if present
+      setAgentFilters(prev => prev.filter(id => id !== agentId));
+      if (selectedAgentFilter === agentId) {
+        setSelectedAgentFilter('');
+      }
+      
+      setSuccessMessage(`Agent "${agentName}" deleted successfully!`);
+      setShowSuccessMessage(true);
+    } catch (error) {
+      console.error('Error deleting agent:', error);
+      setErrorMessage('Error deleting agent');
+      setShowErrorMessage(true);
+    } finally {
+      delete window.pendingAgentDelete;
+    }
+  };
+
+  const handleFocusAgent = (agentId) => {
+    // Single agent filter and update UI
+    setSelectedAgentFilter(agentId);
+    setAgentFilters([agentId]);
+  };
+
   // Fetch memory suggestions
   const fetchMemorySuggestions = useCallback(async (tUnitId, agentId) => {
     setIsLoadingMemory(true);
