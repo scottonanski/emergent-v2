@@ -2243,6 +2243,7 @@ function App() {
       </button>
 
       {/* Tutorial/Onboarding Overlay */}
+      <div>
       <AnimatePresence>
         {showTutorial && (
           <motion.div
