@@ -230,9 +230,8 @@ function App() {
   const [selectedNodes, setSelectedNodes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSynthesis, setShowSynthesis] = useState(false);
-  const [showTransformation, setShowTransformation] = useState(false);
   const [showMultiAgent, setShowMultiAgent] = useState(false);
-  const [anomalyText, setAnomalyText] = useState('');
+  const [selectedAgent, setSelectedAgent] = useState('');
   const [events, setEvents] = useState([]);
   const [agents, setAgents] = useState([]);
   const [selectedAgent, setSelectedAgent] = useState('');
