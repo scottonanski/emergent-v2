@@ -877,6 +877,19 @@ async def init_sample_data():
     
     return {"message": "Enhanced sample data initialized", "t_units": len(sample_t_units), "agents": len(sample_agents)}
 
+@api_router.delete("/reset-world")
+async def reset_world():
+    """Reset the entire world by clearing all data"""
+    try:
+        # Clear all collections
+        await db.t_units.delete_many({})
+        await db.events.delete_many({})
+        await db.agents.delete_many({})
+        
+        return {"message": "World reset successfully", "cleared": ["t_units", "events", "agents"]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to reset world: {str(e)}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
