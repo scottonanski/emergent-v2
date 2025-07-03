@@ -922,6 +922,89 @@ function App() {
     }
   };
 
+  // Enhanced Agent Management Functions
+  const handleEditAgent = (agent) => {
+    setEditingAgent(agent.id);
+    setEditingAgentName(agent.name);
+  };
+
+  const handleSaveAgentEdit = async (agentId) => {
+    if (!editingAgentName.trim()) return;
+    
+    setIsLoading(true);
+    try {
+      await axios.put(`${API}/agents/${agentId}`, {
+        name: editingAgentName.trim()
+      });
+      await fetchAgents();
+      setEditingAgent(null);
+      setEditingAgentName('');
+      setSuccessMessage('Agent renamed successfully!');
+      setShowSuccessMessage(true);
+    } catch (error) {
+      console.error('Error updating agent:', error);
+      setErrorMessage('Error updating agent');
+      setShowErrorMessage(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancelAgentEdit = () => {
+    setEditingAgent(null);
+    setEditingAgentName('');
+  };
+
+  const handleDeleteAgent = async (agentId, agentName) => {
+    // Show confirmation in custom modal
+    if (!window.confirm(`Are you sure you want to delete agent "${agentName}"? This action cannot be undone.`)) {
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      await axios.delete(`${API}/agents/${agentId}`);
+      await fetchAgents();
+      // If we were filtering by this agent, reset filter
+      if (selectedAgentFilter === agentId) {
+        setSelectedAgentFilter('');
+      }
+      // Remove from multi-select filters
+      setAgentFilters(prev => prev.filter(id => id !== agentId));
+      setSuccessMessage('Agent deleted successfully!');
+      setShowSuccessMessage(true);
+    } catch (error) {
+      console.error('Error deleting agent:', error);
+      const message = error.response?.data?.detail || 'Error deleting agent';
+      setErrorMessage(message);
+      setShowErrorMessage(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFocusAgent = (agentId) => {
+    // Set single agent filter and update UI
+    setSelectedAgentFilter(agentId);
+    setAgentFilters([agentId]);
+  };
+
+  const handleToggleAgentFilter = (agentId) => {
+    if (agentId === 'all') {
+      setAgentFilters(['all']);
+      setSelectedAgentFilter('');
+    } else {
+      setAgentFilters(prev => {
+        const newFilters = prev.includes('all') ? [] : [...prev];
+        if (newFilters.includes(agentId)) {
+          return newFilters.filter(id => id !== agentId);
+        } else {
+          return [...newFilters, agentId];
+        }
+      });
+    }
+  };
+
   // Initialize on component mount
   useEffect(() => {
     const initializeApp = async () => {
