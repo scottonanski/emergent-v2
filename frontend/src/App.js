@@ -268,7 +268,7 @@ function App() {
   // Reset tree layout (remove manual positioning)
   const resetTreeLayout = useCallback(() => {
     convertTUnitsToGraph(tUnits, false);
-  }, [convertTUnitsToGraph, tUnits]);
+  }, [tUnits]);
 
   // Custom nodes change handler to track manual positioning
   const handleNodesChange = useCallback((changes) => {
