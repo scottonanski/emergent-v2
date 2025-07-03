@@ -519,6 +519,12 @@ async def transform_t_unit(request: TransformationRequest):
             ai_generated=ai_generated
         )
         
+        # Generate embedding for the phase T-unit
+        embedding = await generate_embedding(phase_t_unit.content)
+        if embedding:
+            phase_t_unit.embedding = embedding
+            phase_t_unit.embedding_model = "text-embedding-ada-002"
+        
         new_t_units.append(phase_t_unit)
         
         # Save to database
