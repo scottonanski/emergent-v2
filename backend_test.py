@@ -33,6 +33,10 @@ class CEPWebAPITester:
                 response = requests.get(url, headers=headers)
             elif method == 'POST':
                 response = requests.post(url, json=data, headers=headers)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers)
             else:
                 raise ValueError(f"Unsupported method: {method}")
 
