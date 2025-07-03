@@ -274,12 +274,15 @@ function App() {
 
   const fetchEvents = useCallback(async () => {
     try {
-      const response = await axios.get(`${API}/events`);
+      const url = selectedAgentFilter 
+        ? `${API}/events?agent_id=${selectedAgentFilter}` 
+        : `${API}/events`;
+      const response = await axios.get(url);
       setEvents(response.data);
     } catch (error) {
       console.error('Error fetching events:', error);
     }
-  }, []);
+  }, [selectedAgentFilter]);
 
   const fetchAgents = useCallback(async () => {
     try {
