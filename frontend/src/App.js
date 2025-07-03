@@ -926,7 +926,7 @@ function App() {
         name: newAgentName,
         description: newAgentDescription
       });
-      await fetchAgents();
+      await Promise.all([fetchAgents(), fetchAgentsWithStats()]);
       setShowAgentCreation(false);
       setNewAgentName('');
       setNewAgentDescription('');
