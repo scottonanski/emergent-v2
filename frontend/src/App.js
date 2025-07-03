@@ -509,14 +509,20 @@ function App() {
 
   // Reset World functionality
   const resetWorld = useCallback(async () => {
+    console.log('Reset World button clicked!'); // Debug log
+    
     if (!window.confirm('Are you sure you want to reset the entire world? This will delete all thoughts, agents, and events.')) {
+      console.log('Reset cancelled by user'); // Debug log
       return;
     }
     
+    console.log('Starting reset...'); // Debug log
     setIsLoading(true);
     try {
       // Clear database
+      console.log('Calling backend reset endpoint...'); // Debug log
       const response = await axios.delete(`${API}/reset-world`);
+      console.log('Backend response:', response.data); // Debug log
       
       // Reset local state
       setTUnits([]);
@@ -533,6 +539,8 @@ function App() {
       setValenceData([]);
       setTimelineData([]);
       
+      console.log('Local state reset complete'); // Debug log
+      
       // Show detailed success message
       alert(`World reset successfully!\n\nCleared: ${response.data.cleared.join(', ')}\nThe canvas is now empty and ready for new thoughts.`);
     } catch (error) {
@@ -540,6 +548,7 @@ function App() {
       alert(`Error resetting world: ${error.response?.data?.detail || error.message}\n\nCheck the browser console for more details.`);
     } finally {
       setIsLoading(false);
+      console.log('Reset operation complete'); // Debug log
     }
   }, [setNodes, setEdges]);
 
