@@ -304,6 +304,31 @@ function App() {
     setTutorialStep(1);
   };
 
+  // React Flow instance ref for camera control
+  const reactFlowInstance = useRef(null);
+
+  // Smart camera focus on new nodes
+  const focusOnNode = useCallback((nodeId) => {
+    if (!reactFlowInstance.current || !nodeId) return;
+    
+    const node = nodes.find(n => n.id === nodeId);
+    if (node) {
+      // Center camera on the new node with smooth animation
+      reactFlowInstance.current.setCenter(node.position.x, node.position.y, { zoom: 1.2, duration: 800 });
+    }
+  }, [nodes]);
+
+  // AI Thinking animation helpers
+  const startThinking = (message = 'AI is thinking...') => {
+    setIsThinking(true);
+    setThinkingMessage(message);
+  };
+
+  const stopThinking = () => {
+    setIsThinking(false);
+    setThinkingMessage('');
+  };
+
   // Reset tree layout (remove manual positioning)
   const resetTreeLayout = useCallback(() => {
     convertTUnitsToGraph(tUnits, false);
