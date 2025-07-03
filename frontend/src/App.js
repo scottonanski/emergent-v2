@@ -500,43 +500,6 @@ function App() {
     }
   };
 
-  // Handle transformation
-  const handleTransformation = async () => {
-    if (selectedNodes.length !== 1) {
-      alert('Please select exactly 1 T-unit for transformation');
-      return;
-    }
-
-    if (!anomalyText.trim()) {
-      alert('Please enter an anomaly description');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      // Get recalled nodes (excluding the target transformation node)
-      const targetNode = selectedNodes[0];
-      const recalledForTransformation = recalledNodes.filter(id => id !== targetNode);
-      
-      await axios.post(`${API}/transform`, {
-        t_unit_id: targetNode,
-        anomaly: anomalyText,
-        recalled_ids: recalledForTransformation,
-        use_ai: useAI
-      });
-      await Promise.all([fetchTUnits(), fetchEvents(), fetchAnalytics()]);
-      setSelectedNodes([]);
-      setRecalledNodes([]);
-      setShowTransformation(false);
-      setAnomalyText('');
-    } catch (error) {
-      console.error('Error during transformation:', error);
-      alert('Error during transformation');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // Handle multi-agent exchange
   // Handle agent creation
   const handleCreateAgent = async () => {
