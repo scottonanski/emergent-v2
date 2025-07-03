@@ -246,6 +246,10 @@ function App() {
   const [useAI, setUseAI] = useState(true);
   const [showImportExport, setShowImportExport] = useState(false);
   const [agents, setAgents] = useState([]);
+  const [showAgentCreation, setShowAgentCreation] = useState(false);
+  const [newAgentName, setNewAgentName] = useState('');
+  const [newAgentDescription, setNewAgentDescription] = useState('');
+  const [selectedAgentFilter, setSelectedAgentFilter] = useState('');
 
   // Custom edge styles
   const edgeOptions = {
