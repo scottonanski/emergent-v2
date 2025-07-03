@@ -702,7 +702,7 @@ function App() {
   // Update graph when T-units change
   useEffect(() => {
     convertTUnitsToGraph(tUnits, false); // false = don't preserve positions, recalculate tree
-  }, [tUnits]);
+  }, [tUnits, convertTUnitsToGraph]);
 
   // Update node selection and recalled status without recalculating layout
   useEffect(() => {
