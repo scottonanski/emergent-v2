@@ -12,7 +12,7 @@ load_dotenv('/app/frontend/.env')
 class CEPWebAPITester:
     def __init__(self):
         # Get backend URL from environment variable
-        self.base_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://8f24eb66-08e1-4672-90f7-7df4db075b79.preview.emergentagent.com')
+        self.base_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://f0bb2cfb-1431-4ea0-9dc3-90ec72a48ea9.preview.emergentagent.com')
         self.api_url = f"{self.base_url}/api"
         self.tests_run = 0
         self.tests_passed = 0
