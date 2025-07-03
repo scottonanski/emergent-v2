@@ -548,13 +548,23 @@ async def synthesize_t_units(request: SynthesisRequest):
 
 @api_router.post("/transform", response_model=List[TUnit])
 async def transform_t_unit(request: TransformationRequest):
-    """Transform a T-unit through the 5-phase transformation loop with AI enhancement"""
+    """Transform a T-unit through the 5-phase transformation loop with AI enhancement and memory awareness"""
     # Get the original T-unit
     t_unit_doc = await db.t_units.find_one({"id": request.t_unit_id})
     if not t_unit_doc:
         raise HTTPException(status_code=404, detail="T-unit not found")
     
     original_t_unit = TUnit(**t_unit_doc)
+    
+    # Get recalled T-units if any
+    recalled_t_units = []
+    for recalled_id in request.recalled_ids:
+        recalled_doc = await db.t_units.find_one({"id": recalled_id})
+        if recalled_doc:
+            recalled_t_units.append(TUnit(**recalled_doc))
+    
+    recalled_contents = [t.content for t in recalled_t_units] if recalled_t_units else None
+    recalled_valences = [t.valence for t in recalled_t_units] if recalled_t_units else None
     
     # 5 phases of transformation
     phases = ["Shattering", "Remembering", "Re-feeling", "Re-centering", "Becoming"]
@@ -566,7 +576,9 @@ async def transform_t_unit(request: TransformationRequest):
                 original_t_unit.content, 
                 original_t_unit.valence, 
                 phase, 
-                request.anomaly
+                request.anomaly,
+                recalled_contents,
+                recalled_valences
             )
             ai_generated = True
         else:
@@ -600,7 +612,15 @@ async def transform_t_unit(request: TransformationRequest):
         event = Event(
             type="transformation",
             t_unit_id=phase_t_unit.id,
-            metadata={"phase": phase, "parent_id": request.t_unit_id, "anomaly": request.anomaly, "ai_generated": ai_generated},
+            metadata={
+                "phase": phase, 
+                "parent_id": request.t_unit_id, 
+                "anomaly": request.anomaly, 
+                "ai_generated": ai_generated,
+                "memory_influenced": len(request.recalled_ids) > 0,
+                "recalled_count": len(request.recalled_ids),
+                "recalled_ids": request.recalled_ids
+            },
             agent_id=original_t_unit.agent_id
         )
         await db.events.insert_one(event.dict())
