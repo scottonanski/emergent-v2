@@ -83,6 +83,7 @@ CEP-Web transforms abstract cognitive processes into living, interactive visuali
 - **AI-Driven Transformation**: Context-aware evolution through 5 cognitive phases (Shattering, Remembering, Re-feeling, Re-centering, Becoming)
 - **Memory-Influenced Processing**: Past insights actively shape new cognitive operations through semantic recall
 - **Smart Valence Analysis**: AI-generated emotional/cognitive states with dynamic adaptation
+- **💭 AI Thinking Animation**: Visual feedback showing when AI is processing with floating bubble and custom messages
 
 ### 🧠 Semantic Memory System
 - **OpenAI Embeddings**: Automatic semantic similarity detection using text-embedding-ada-002
