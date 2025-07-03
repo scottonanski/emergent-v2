@@ -350,6 +350,98 @@ class CEPWebAPITester:
             return True
         return False
     
+    def test_update_agent(self):
+        """Test updating an agent"""
+        print("\n=== Testing Agent Update ===")
+        
+        if not self.agent_ids:
+            print("❌ No agents available for update test")
+            return False
+        
+        # Use the first agent for the update test
+        agent_id = self.agent_ids[0]
+        
+        # Update the agent name
+        update_data = {
+            "name": "Updated Agent Name"
+        }
+        
+        success, response = self.run_test(
+            f"Update Agent ({agent_id})",
+            "PUT",
+            f"agents/{agent_id}",
+            200,
+            data=update_data
+        )
+        
+        if success:
+            # Validate agent update
+            if "id" not in response or response["id"] != agent_id:
+                print("❌ Updated agent ID doesn't match requested ID")
+                return False
+            
+            if "name" not in response or response["name"] != update_data["name"]:
+                print("❌ Agent name wasn't updated correctly")
+                return False
+            
+            print("✅ Agent update validation passed")
+            return True
+        return False
+    
+    def test_delete_agent(self):
+        """Test deleting an agent"""
+        print("\n=== Testing Agent Deletion ===")
+        
+        # Create a new agent specifically for deletion
+        test_agent = {
+            "name": "Agent To Delete",
+            "description": "This agent will be deleted in the test"
+        }
+        
+        success, response = self.run_test(
+            "Create Agent for Deletion",
+            "POST",
+            "agents",
+            200,
+            data=test_agent
+        )
+        
+        if not success or "id" not in response:
+            print("❌ Failed to create agent for deletion test")
+            return False
+        
+        agent_id = response["id"]
+        
+        # Delete the agent
+        success, response = self.run_test(
+            f"Delete Agent ({agent_id})",
+            "DELETE",
+            f"agents/{agent_id}",
+            200
+        )
+        
+        if success:
+            # Validate deletion response
+            if "message" not in response or "deleted successfully" not in response["message"]:
+                print("❌ Deletion response doesn't confirm successful deletion")
+                return False
+            
+            # Verify the agent is actually gone
+            verify_success, verify_response = self.run_test(
+                f"Verify Agent Deletion ({agent_id})",
+                "GET",
+                f"agents/{agent_id}",
+                404  # Expect 404 Not Found
+            )
+            
+            if verify_success:
+                print("✅ Agent deletion validation passed")
+                return True
+            else:
+                print("❌ Agent still exists after deletion")
+                return False
+        return False
+    
     def test_memory_suggestions(self):
         """Test memory suggestions"""
         print("\n=== Testing Memory Suggestions ===")
