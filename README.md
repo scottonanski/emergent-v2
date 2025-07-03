@@ -116,7 +116,7 @@ EOF
 cd ../frontend
 yarn install
 
-# Create .env file (if not exists)
+# Create .env file
 cat > .env << EOF
 REACT_APP_BACKEND_URL=http://localhost:8001
 EOF
@@ -142,66 +142,113 @@ cd frontend
 yarn start
 ```
 
-6. **Initialize Sample Data**
-Navigate to `http://localhost:3000` and click "Initialize Sample Data" to populate the system with example T-units and agents.
+6. **First-Time Setup**
+Navigate to `http://localhost:3000` and:
+- **Optional**: Enable "Auto-generate on load" checkbox for sample data
+- **Or**: Click "Initialize Sample Data" manually to populate with examples  
+- **Or**: Click "✨ Create Thought" to start with your own thoughts
 
 ## 📖 Usage Guide
+
+### Getting Started
+
+#### First Steps
+1. **🌍 Fresh Start**: The app starts clean by default - no overwhelming data explosion
+2. **✨ Create Your First Thought**: Click "Create Thought" and enter your own ideas with custom valence settings
+3. **🔄 Sample Data**: Click "Initialize Sample Data" if you want to explore with examples
+4. **💭 Explore Memory**: Select any single thought to see related memory suggestions in the floating panel
+
+#### Core Interface
+- **Auto-Generation Toggle**: Check this if you want sample data on every reload (default: off)
+- **Reset World**: Red button to completely clear everything and start fresh  
+- **Create Thought**: Green button to manually add thoughts with precise emotional settings
+- **Tree Layout**: Thoughts appear in a clean hierarchy showing cognitive evolution
+- **Memory Panel**: Floats in top-right when you select a single thought node
 
 ### Core Concepts
 
 #### T-units (Thought Units)
 The fundamental cognitive building blocks. Each T-unit contains:
 - **Content**: The thought or idea text
-- **Valence**: Emotional/cognitive coloring
-  - *Curiosity* (0-1): Drive to explore and understand
-  - *Certainty* (0-1): Confidence in the thought's validity
-  - *Dissonance* (0-1): Cognitive tension or conflict
+- **Valence**: Emotional/cognitive fingerprinting
+  - *Curiosity* (0-1): Drive to explore and understand (Green)
+  - *Certainty* (0-1): Confidence in the thought's validity (Blue)  
+  - *Dissonance* (0-1): Cognitive tension or conflict (Red)
 - **Relationships**: Parent-child connections showing cognitive lineage
 - **Agent Attribution**: Which cognitive agent created it
 - **Memory Embedding**: Semantic vector for similarity detection
 
+#### Visual Elements
+- **Node Colors**: Based on dominant valence (red=dissonance, green=curiosity, light green=certainty)
+- **Tab Badges**: Clean indicators for AI generation, agent ID, transformation phases, memory recall
+- **Tree Structure**: Hierarchical layout showing thought evolution from parents to children
+- **Drag & Drop**: Move nodes manually - they stay where you put them
+- **Memory Panel**: Beautiful floating overlay with gradient styling and animations
+
 #### Cognitive Operations
 
 ##### Synthesis
-Combines multiple T-units into emergent thoughts representing higher-order cognition:
-1. Select 2+ T-units by clicking graph nodes
-2. Toggle AI enhancement on/off
-3. Click "Synthesis" to combine selected thoughts
-4. Watch as GPT-4 creates coherent emergent content with memory influence
+Combines multiple T-units into emergent thoughts:
+1. **Select 2+ thoughts** by clicking graph nodes
+2. **Review memory suggestions** that appear in floating panel  
+3. **Recall memories** by clicking "Recall" buttons (optional)
+4. **Choose AI enhancement** toggle
+5. **Click "Synthesis"** to combine selected thoughts + memories
+6. **Watch new thought appear** connected to its parents in the tree
 
 **Example AI Synthesis with Memory:**
 ```
-Input T-units:
+Selected T-units:
 - "The nature of consciousness is recursive"
 - "Thoughts emerge from simpler units" 
-- "Cognitive dissonance drives transformation"
 
 Recalled Memory:
 - "Intelligence is the pattern that connects"
 
 AI Output:
-"Consciousness, a recursive phenomenon connecting patterns of intelligence, 
-emerges from the synthesis of simpler cognitive units while being driven 
-and transformed by the inherent dissonance in this complex process."
+"Consciousness emerges as a recursive pattern-recognition system, 
+where intelligence connects disparate cognitive units into coherent 
+thought structures that continuously reference and build upon themselves."
 ```
 
 ##### Transformation
-Processes cognitive anomalies through structured phases:
-1. Select exactly 1 T-unit
-2. Enter an anomaly description (cognitive conflict)
-3. Execute transformation to create 5 new T-units representing:
-   - **Shattering**: Breaking down assumptions (↑ dissonance)
-   - **Remembering**: Recalling related experiences (↑ curiosity)  
+Processes single thoughts through 5 cognitive phases:
+1. **Select exactly 1 T-unit**
+2. **Enter anomaly description** (cognitive conflict or question)
+3. **Optionally recall memories** for context
+4. **Execute transformation** to create 5 connected phase nodes:
+   - **Shattering**: Breaking down assumptions (↑ dissonance, red nodes)
+   - **Remembering**: Recalling related experiences (↑ curiosity, green nodes)  
    - **Re-feeling**: Emotional processing (↓ dissonance)
-   - **Re-centering**: Finding new stability (↑ certainty)
+   - **Re-centering**: Finding new stability (↑ certainty, blue nodes)
    - **Becoming**: Integration and emergence (balanced valence)
 
 ##### Memory System
-- **Automatic Suggestions**: When selecting 1 T-unit, related memories appear
+- **Automatic Suggestions**: Selecting 1 node triggers beautiful floating memory panel
 - **Semantic Similarity**: Uses OpenAI embeddings for intelligent matching
-- **One-Click Recall**: Add memories to current selection for synthesis/transformation
-- **Memory Influence**: Recalled thoughts actively shape new cognitive operations
-- **Cross-Agent Memory**: Optional memory sharing between different agents
+- **Similarity Scores**: Shows percentage match for semantic and valence similarity
+- **One-Click Recall**: Click "Recall" to add memories to current selection
+- **Memory Influence**: Recalled thoughts actively shape AI synthesis and transformation
+- **Cross-Agent Memory**: Toggle to include memories from other agents
+
+### Manual Thought Creation
+
+The "✨ Create Thought" feature provides advanced control:
+
+#### Content & Agent
+- **Thought Content**: Large textarea for your ideas
+- **Agent Selection**: Choose which cognitive agent creates this thought
+
+#### Valence Sliders (Emotional Fingerprinting)
+- **🧠 Curiosity (Green)**: How much this thought drives exploration (default: 0.6)
+- **🎯 Certainty (Blue)**: How confident/stable this thought feels (default: 0.4)  
+- **⚡ Dissonance (Red)**: How much cognitive tension/conflict (default: 0.2)
+
+**Valence Tips:**
+- High curiosity → Green nodes, drives further exploration
+- High certainty → Light green nodes, stable foundations  
+- High dissonance → Red nodes, needs transformation/resolution
+- Balanced valence → Yellow nodes, neutral cognitive state
 
 ### Multi-Agent Modeling
 - **Agent Alpha**: Default agent focused on recursive thinking patterns
