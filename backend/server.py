@@ -310,15 +310,37 @@ The valence should reflect the emergent cognitive state, considering both curren
         # Fallback to simple synthesis
         return synthesize_content(contents), average_valence(valences)
 
-async def ai_transform_content(original_content: str, original_valence: Valence, phase: str, anomaly: str) -> tuple[str, Valence]:
-    """Use AI to intelligently transform content through cognitive phases"""
+async def ai_transform_content(original_content: str, original_valence: Valence, phase: str, anomaly: str, recalled_contents: List[str] = None, recalled_valences: List[Valence] = None) -> tuple[str, Valence]:
+    """Use AI to intelligently transform content through cognitive phases with memory context"""
     try:
+        # Build memory context if present
+        memory_context = ""
+        memory_influence_style = ""
+        if recalled_contents and recalled_valences:
+            memory_context = "\n[RECALLED MEMORIES] These memories are present in current awareness:\n"
+            for i, (content, valence) in enumerate(zip(recalled_contents, recalled_valences)):
+                memory_context += f"Memory {i+1}: {content}\n"
+            
+            # Analyze recalled valence for phase-specific influence
+            avg_recalled_dissonance = sum(v.dissonance for v in recalled_valences) / len(recalled_valences)
+            avg_recalled_curiosity = sum(v.curiosity for v in recalled_valences) / len(recalled_valences)
+            
+            if phase == "Shattering" and avg_recalled_dissonance > 0.6:
+                memory_influence_style = "\nThe recalled memories show high dissonance - use them to intensify the questioning and breakdown of assumptions."
+            elif phase == "Remembering" and avg_recalled_curiosity > 0.7:
+                memory_influence_style = "\nThe recalled memories show high curiosity - let them guide deeper exploration of related experiences."
+            elif phase == "Re-centering":
+                memory_influence_style = "\nUse the recalled memories as stable reference points to help establish new cognitive grounding."
+            else:
+                memory_influence_style = "\nLet the recalled memories naturally inform and enrich this transformation phase."
+
         prompt = f"""You are processing a cognitive transformation in the Cognitive Emergence Protocol.
 
 Original T-unit: {original_content}
 Original Valence - Curiosity: {original_valence.curiosity:.2f}, Certainty: {original_valence.certainty:.2f}, Dissonance: {original_valence.dissonance:.2f}
 Transformation Phase: {phase}
 Anomaly: {anomaly}
+{memory_context}
 
 Transform this T-unit through the "{phase}" phase. Each phase has specific cognitive characteristics:
 
@@ -327,6 +349,9 @@ Transform this T-unit through the "{phase}" phase. Each phase has specific cogni
 - Re-feeling: Emotional processing, reducing dissonance
 - Re-centering: Finding new stability, increasing certainty
 - Becoming: Integration and emergence, high certainty with balanced other valences
+
+{f"The transformation should incorporate insights from the recalled memories." if recalled_contents else ""}
+{memory_influence_style}
 
 Respond in this exact JSON format:
 {{
