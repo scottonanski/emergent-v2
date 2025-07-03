@@ -240,8 +240,8 @@ async def find_memory_suggestions(
 
 # ============== AI INTEGRATION ==============
 
-async def ai_synthesize_content(contents: List[str], valences: List[Valence]) -> tuple[str, Valence]:
-    """Use AI to intelligently synthesize content from multiple T-units"""
+async def ai_synthesize_content(contents: List[str], valences: List[Valence], recalled_contents: List[str] = None, recalled_valences: List[Valence] = None) -> tuple[str, Valence]:
+    """Use AI to intelligently synthesize content from multiple T-units with memory context"""
     try:
         # Prepare context for AI
         context = ""
@@ -249,15 +249,37 @@ async def ai_synthesize_content(contents: List[str], valences: List[Valence]) ->
             context += f"T-unit {i+1}: {content}\n"
             context += f"Valence - Curiosity: {valence.curiosity:.2f}, Certainty: {valence.certainty:.2f}, Dissonance: {valence.dissonance:.2f}\n\n"
         
+        # Add recalled memory context if present
+        memory_context = ""
+        memory_influence_style = ""
+        if recalled_contents and recalled_valences:
+            memory_context = "\n[RECALLED MEMORIES] The following thoughts have been recalled from memory and should influence this synthesis:\n"
+            for i, (content, valence) in enumerate(zip(recalled_contents, recalled_valences)):
+                memory_context += f"Memory {i+1}: {content}\n"
+                memory_context += f"Memory Valence - Curiosity: {valence.curiosity:.2f}, Certainty: {valence.certainty:.2f}, Dissonance: {valence.dissonance:.2f}\n\n"
+            
+            # Analyze recalled valence to determine synthesis style
+            avg_recalled_curiosity = sum(v.curiosity for v in recalled_valences) / len(recalled_valences)
+            avg_recalled_dissonance = sum(v.dissonance for v in recalled_valences) / len(recalled_valences)
+            
+            if avg_recalled_curiosity > 0.7:
+                memory_influence_style = "\nThe recalled memories show high curiosity - be more exploratory and speculative in your synthesis."
+            elif avg_recalled_dissonance > 0.6:
+                memory_influence_style = "\nThe recalled memories show high dissonance - focus on resolving tensions and finding harmony in your synthesis."
+            else:
+                memory_influence_style = "\nThe recalled memories provide stable context - integrate their insights naturally into your synthesis."
+
         prompt = f"""You are synthesizing cognitive T-units in a Cognitive Emergence Protocol. 
         
-Given these T-units:
+Given these current T-units:
 {context}
+{memory_context}
 
 Create a new emergent T-unit that:
-1. Synthesizes the core insights from all input T-units
-2. Represents a higher-order cognitive emergence
+1. Synthesizes the core insights from all current T-units
+2. {f"Integrates and builds upon the recalled memories naturally" if recalled_contents else "Represents a higher-order cognitive emergence"}
 3. Maintains conceptual coherence while introducing novel perspectives
+{memory_influence_style}
 
 Respond in this exact JSON format:
 {{
@@ -269,7 +291,7 @@ Respond in this exact JSON format:
     }}
 }}
 
-The valence should reflect the emergent cognitive state - how the synthesis affects curiosity (drive to explore), certainty (confidence in the insight), and dissonance (cognitive tension)."""
+The valence should reflect the emergent cognitive state, considering both current thoughts and recalled memories."""
 
         response = openai_client.chat.completions.create(
             model="gpt-4",
