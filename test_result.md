@@ -119,6 +119,9 @@
         - working: true
           agent: "testing"
           comment: "Comprehensive testing of all backend API endpoints completed. 19/20 tests passed. All core functionality for tree layout is working correctly including T-unit CRUD, synthesis, transformation, agent management, memory suggestions, multi-agent exchange, and analytics. Only the Genesis export endpoint failed with a 500 error, but this is not critical for the tree layout functionality."
+        - working: true
+          agent: "testing"
+          comment: "Completed testing of agent-related backend functionality after layout refactoring. All agent management endpoints are working correctly: GET /api/agents, GET /api/agents/stats, POST /api/agents, PUT /api/agents/{agent_id}, DELETE /api/agents/{agent_id}. Agent-related T-unit operations are also functioning properly: POST /api/t-units with agent_id, GET /api/t-units?agent_id={id}, POST /api/synthesize with agent context, POST /api/transform with agent context. Multi-agent exchange and memory system with agent context are working as expected. 25/26 tests passed, with only the Genesis export endpoint failing (same as previous test)."
 
 ## frontend:
   - task: "Tree Layout Implementation"
