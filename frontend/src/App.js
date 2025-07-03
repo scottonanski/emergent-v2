@@ -262,12 +262,15 @@ function App() {
   // Fetch data functions
   const fetchTUnits = useCallback(async () => {
     try {
-      const response = await axios.get(`${API}/t-units`);
+      const url = selectedAgentFilter 
+        ? `${API}/t-units?agent_id=${selectedAgentFilter}` 
+        : `${API}/t-units`;
+      const response = await axios.get(url);
       setTUnits(response.data);
     } catch (error) {
       console.error('Error fetching T-units:', error);
     }
-  }, []);
+  }, [selectedAgentFilter]);
 
   const fetchEvents = useCallback(async () => {
     try {
