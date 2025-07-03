@@ -741,6 +741,50 @@ function App() {
               </AnimatePresence>
             </div>
 
+            {/* Transformation */}
+            <div>
+              <button
+                onClick={() => setShowTransformation(!showTransformation)}
+                disabled={selectedNodes.length !== 1}
+                className="w-full px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 disabled:opacity-50"
+              >
+                🔄 Transformation (1 T-unit)
+              </button>
+              <AnimatePresence>
+                {showTransformation && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-2 p-3 bg-gray-50 rounded"
+                  >
+                    <p className="text-sm mb-2">
+                      {useAI ? 'AI-powered transformation' : 'Basic transformation'} through 5 phases
+                      {recalledNodes.length > 0 && (
+                        <span className="block text-cyan-600 text-xs mt-1">
+                          💭 {recalledNodes.length} memory{recalledNodes.length > 1 ? 'ies' : 'y'} will influence this transformation
+                        </span>
+                      )}
+                    </p>
+                    <input
+                      type="text"
+                      placeholder="Enter anomaly description..."
+                      value={anomalyText}
+                      onChange={(e) => setAnomalyText(e.target.value)}
+                      className="w-full px-2 py-1 border rounded mb-2"
+                    />
+                    <button
+                      onClick={handleTransformation}
+                      disabled={isLoading || !anomalyText.trim()}
+                      className="w-full px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700"
+                    >
+                      Execute Transformation
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             {/* Multi-Agent Exchange */}
             <div>
               <button
