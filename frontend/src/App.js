@@ -233,8 +233,6 @@ function App() {
   const [showMultiAgent, setShowMultiAgent] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState('');
   const [events, setEvents] = useState([]);
-  const [agents, setAgents] = useState([]);
-  const [selectedAgent, setSelectedAgent] = useState('');
   const [valenceData, setValenceData] = useState([]);
   const [timelineData, setTimelineData] = useState([]);
   const [activeTab, setActiveTab] = useState('graph');
