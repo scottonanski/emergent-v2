@@ -107,6 +107,135 @@ class MemorySuggestRequest(BaseModel):
     include_cross_agent: bool = Field(default=False, description="Include memories from other agents")
     valence_weight: float = Field(default=0.25, ge=0.0, le=1.0, description="Weight for valence similarity in scoring")
 
+# ============== EMBEDDING & MEMORY FUNCTIONS ==============
+
+async def generate_embedding(text: str) -> Optional[List[float]]:
+    """Generate OpenAI embedding for text"""
+    try:
+        response = openai_client.embeddings.create(
+            model="text-embedding-ada-002",
+            input=text.strip()
+        )
+        return response.data[0].embedding
+    except Exception as e:
+        logging.error(f"Failed to generate embedding: {e}")
+        return None
+
+async def get_or_create_embedding(t_unit: TUnit) -> Optional[List[float]]:
+    """Get existing embedding or generate new one for T-unit"""
+    if t_unit.embedding:
+        return t_unit.embedding
+    
+    # Generate new embedding
+    embedding = await generate_embedding(t_unit.content)
+    if embedding:
+        # Update T-unit with embedding
+        await db.t_units.update_one(
+            {"id": t_unit.id},
+            {"$set": {
+                "embedding": embedding,
+                "embedding_model": "text-embedding-ada-002"
+            }}
+        )
+    return embedding
+
+def cosine_similarity(a: List[float], b: List[float]) -> float:
+    """Calculate cosine similarity between two vectors"""
+    if not a or not b or len(a) != len(b):
+        return 0.0
+    
+    try:
+        a_np = np.array(a)
+        b_np = np.array(b)
+        
+        dot_product = np.dot(a_np, b_np)
+        norm_a = np.linalg.norm(a_np)
+        norm_b = np.linalg.norm(b_np)
+        
+        if norm_a == 0 or norm_b == 0:
+            return 0.0
+            
+        return float(dot_product / (norm_a * norm_b))
+    except Exception as e:
+        logging.error(f"Error calculating cosine similarity: {e}")
+        return 0.0
+
+def valence_similarity(v1: Valence, v2: Valence) -> float:
+    """Calculate valence similarity (1 - L1 distance, normalized)"""
+    try:
+        distance = (
+            abs(v1.curiosity - v2.curiosity) +
+            abs(v1.certainty - v2.certainty) +
+            abs(v1.dissonance - v2.dissonance)
+        )
+        # L1 distance max is 3.0 (when all values differ by 1.0)
+        # Convert to similarity score (higher = more similar)
+        return max(0.0, 1.0 - (distance / 3.0))
+    except Exception as e:
+        logging.error(f"Error calculating valence similarity: {e}")
+        return 0.0
+
+async def find_memory_suggestions(
+    target_t_unit: TUnit, 
+    agent_id: str, 
+    limit: int = 10,
+    include_cross_agent: bool = False,
+    valence_weight: float = 0.25
+) -> List[MemorySuggestion]:
+    """Find semantically similar T-units from memory"""
+    
+    # Get or generate embedding for target T-unit
+    target_embedding = await get_or_create_embedding(target_t_unit)
+    if not target_embedding:
+        logging.warning(f"Could not generate embedding for T-unit {target_t_unit.id}")
+        return []
+    
+    # Build query filter
+    query = {"id": {"$ne": target_t_unit.id}}  # Exclude the target T-unit itself
+    if not include_cross_agent:
+        query["agent_id"] = agent_id
+    
+    # Fetch candidate T-units (limit to reasonable number for performance)
+    candidates = await db.t_units.find(query).limit(1000).to_list(1000)
+    
+    suggestions = []
+    for candidate_doc in candidates:
+        try:
+            candidate = TUnit(**candidate_doc)
+            
+            # Get or generate embedding for candidate
+            candidate_embedding = await get_or_create_embedding(candidate)
+            if not candidate_embedding:
+                continue
+            
+            # Calculate semantic similarity
+            semantic_sim = cosine_similarity(target_embedding, candidate_embedding)
+            
+            # Calculate valence similarity
+            valence_sim = valence_similarity(target_t_unit.valence, candidate.valence)
+            
+            # Combine scores
+            final_score = (semantic_sim * (1 - valence_weight)) + (valence_sim * valence_weight)
+            
+            suggestions.append(MemorySuggestion(
+                id=candidate.id,
+                content=candidate.content,
+                similarity=semantic_sim,
+                valence_score=valence_sim,
+                final_score=final_score,
+                agent_id=candidate.agent_id,
+                timestamp=candidate.timestamp,
+                valence=candidate.valence
+            ))
+            
+        except Exception as e:
+            logging.error(f"Error processing candidate T-unit: {e}")
+            continue
+    
+    # Sort by final score and return top results
+    suggestions.sort(key=lambda x: x.final_score, reverse=True)
+    return suggestions[:limit]
+
 # ============== AI INTEGRATION ==============
 
 async def ai_synthesize_content(contents: List[str], valences: List[Valence]) -> tuple[str, Valence]:
