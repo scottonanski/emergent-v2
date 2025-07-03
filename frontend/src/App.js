@@ -834,7 +834,31 @@ function App() {
       <div className="bg-white shadow-sm border-b p-4">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-800">🧠 Advanced Cognitive Emergence Protocol</h1>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {/* Auto-Generation Toggle */}
+            <div className="flex items-center gap-2 mr-4">
+              <input
+                type="checkbox"
+                id="autoGenerate"
+                checked={autoGenerateOnLoad}
+                onChange={(e) => setAutoGenerateOnLoad(e.target.checked)}
+                className="rounded"
+              />
+              <label htmlFor="autoGenerate" className="text-sm text-gray-700">
+                Auto-generate on load
+              </label>
+            </div>
+            
+            {/* Create Thought Button */}
+            <button
+              onClick={() => setShowCreateThought(true)}
+              disabled={isLoading}
+              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
+            >
+              ✨ Create Thought
+            </button>
+            
+            {/* Initialize Sample Data Button */}
             <button
               onClick={initSampleData}
               disabled={isLoading}
@@ -842,6 +866,16 @@ function App() {
             >
               {isLoading ? 'Loading...' : 'Initialize Sample Data'}
             </button>
+            
+            {/* Reset World Button */}
+            <button
+              onClick={resetWorld}
+              disabled={isLoading}
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+            >
+              🌍 Reset World
+            </button>
+            
             <button
               onClick={() => setShowImportExport(!showImportExport)}
               className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
