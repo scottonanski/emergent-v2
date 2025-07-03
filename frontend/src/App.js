@@ -516,7 +516,7 @@ function App() {
     setIsLoading(true);
     try {
       // Clear database
-      await axios.delete(`${API}/reset-world`);
+      const response = await axios.delete(`${API}/reset-world`);
       
       // Reset local state
       setTUnits([]);
@@ -533,10 +533,11 @@ function App() {
       setValenceData([]);
       setTimelineData([]);
       
-      alert('World reset successfully!');
+      // Show detailed success message
+      alert(`World reset successfully!\n\nCleared: ${response.data.cleared.join(', ')}\nThe canvas is now empty and ready for new thoughts.`);
     } catch (error) {
       console.error('Error resetting world:', error);
-      alert('Error resetting world. Check console for details.');
+      alert(`Error resetting world: ${error.response?.data?.detail || error.message}\n\nCheck the browser console for more details.`);
     } finally {
       setIsLoading(false);
     }
