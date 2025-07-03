@@ -289,6 +289,13 @@ function App() {
   const [isThinking, setIsThinking] = useState(false);
   const [thinkingMessage, setThinkingMessage] = useState('');
 
+  // Phase 3: Enhanced Agent Panel State
+  const [showAgentsPanel, setShowAgentsPanel] = useState(true);
+  const [agentsWithStats, setAgentsWithStats] = useState([]);
+  const [agentFilters, setAgentFilters] = useState(['all']);
+  const [editingAgent, setEditingAgent] = useState(null);
+  const [editingAgentName, setEditingAgentName] = useState('');
+
   // Check if user has seen onboarding
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
