@@ -1041,10 +1041,10 @@ function App() {
     initializeApp();
   }, [fetchTUnits, fetchEvents, fetchAgents, fetchAnalytics, autoGenerateOnLoad]);
 
-  // Update graph when T-units change
+  // Update graph when T-units or agent filters change
   useEffect(() => {
     convertTUnitsToGraph(tUnits, false); // false = don't preserve positions, recalculate tree
-  }, [tUnits]);
+  }, [tUnits, agentFilters]);
 
   // Update node selection and recalled status without recalculating layout
   useEffect(() => {
