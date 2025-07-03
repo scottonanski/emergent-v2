@@ -153,6 +153,9 @@
         - working: true
           agent: "main"
           comment: "CRITICAL FIX: Resolved black screen issue on app reload. Problem was circular dependency in useCallback hooks - convertTUnitsToGraph was accessing nodes state but also being used in dependency arrays. Fixed by modifying function to accept currentNodes as parameter and removing circular dependencies. App now loads properly."
+        - working: true
+          agent: "main"
+          comment: "UI ENHANCEMENT: Moved memory suggestions panel from sidebar to floating overlay above the canvas. Panel now appears positioned in top-right corner with improved styling, animations, and better visual hierarchy. Enhanced with gradient headers, staggered animations, and backdrop blur effects for better UX."
 
 ## metadata:
   created_by: "main_agent"
