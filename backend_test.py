@@ -458,20 +458,25 @@ class CEPWebAPITester:
                 print("❌ Deletion response doesn't confirm successful deletion")
                 return False
             
-            # Verify the agent is actually gone
-            verify_success, verify_response = self.run_test(
-                f"Verify Agent Deletion ({agent_id})",
+            # Verify the agent is actually gone by getting all agents and checking
+            verify_success, agents_response = self.run_test(
+                "Get All Agents After Deletion",
                 "GET",
-                f"agents/{agent_id}",
-                404  # Expect 404 Not Found
+                "agents",
+                200
             )
             
-            if verify_success:
-                print("✅ Agent deletion validation passed")
-                return True
-            else:
-                print("❌ Agent still exists after deletion")
-                return False
+            if verify_success and isinstance(agents_response, list):
+                # Check if the deleted agent ID is in the list
+                deleted_agent_exists = any(agent["id"] == agent_id for agent in agents_response)
+                
+                if not deleted_agent_exists:
+                    print("✅ Agent deletion validation passed")
+                    return True
+                else:
+                    print("❌ Agent still exists after deletion")
+                    return False
+            return False
         return False
     
     def test_memory_suggestions(self):
