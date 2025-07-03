@@ -470,7 +470,7 @@ async def get_t_unit(t_unit_id: str):
 
 @api_router.post("/synthesize", response_model=TUnit)
 async def synthesize_t_units(request: SynthesisRequest):
-    """Synthesize T-units into a new T-unit with AI enhancement"""
+    """Synthesize T-units into a new T-unit with AI enhancement and memory awareness"""
     # Get the T-units to synthesize
     t_units = []
     for t_unit_id in request.t_unit_ids:
@@ -481,12 +481,23 @@ async def synthesize_t_units(request: SynthesisRequest):
     if len(t_units) < 2:
         raise HTTPException(status_code=400, detail="Need at least 2 T-units for synthesis")
     
-    # Synthesize content and valence
+    # Get recalled T-units if any
+    recalled_t_units = []
+    for recalled_id in request.recalled_ids:
+        recalled_doc = await db.t_units.find_one({"id": recalled_id})
+        if recalled_doc:
+            recalled_t_units.append(TUnit(**recalled_doc))
+    
+    # Prepare data for synthesis
     contents = [t.content for t in t_units]
     valences = [t.valence for t in t_units]
+    recalled_contents = [t.content for t in recalled_t_units] if recalled_t_units else None
+    recalled_valences = [t.valence for t in recalled_t_units] if recalled_t_units else None
     
     if request.use_ai:
-        synthesized_content, synthesized_valence = await ai_synthesize_content(contents, valences)
+        synthesized_content, synthesized_valence = await ai_synthesize_content(
+            contents, valences, recalled_contents, recalled_valences
+        )
         ai_generated = True
     else:
         synthesized_content = synthesize_content(contents)
@@ -522,7 +533,13 @@ async def synthesize_t_units(request: SynthesisRequest):
     event = Event(
         type="synthesis",
         t_unit_id=new_t_unit.id,
-        metadata={"parent_ids": request.t_unit_ids, "ai_generated": ai_generated},
+        metadata={
+            "parent_ids": request.t_unit_ids,
+            "ai_generated": ai_generated,
+            "memory_influenced": len(request.recalled_ids) > 0,
+            "recalled_count": len(request.recalled_ids),
+            "recalled_ids": request.recalled_ids
+        },
         agent_id=t_units[0].agent_id
     )
     await db.events.insert_one(event.dict())
