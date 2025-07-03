@@ -509,56 +509,35 @@ class CEPWebAPITester:
             return True
         return False
         
-    def test_analytics_endpoints(self):
-        """Test analytics endpoints"""
-        print("\n=== Testing Analytics Endpoints ===")
-        
-        # Test valence distribution
+    def test_get_agents(self):
+        """Test getting agents"""
+        print("\n=== Testing Agents Retrieval ===")
         success, response = self.run_test(
-            "Get Valence Distribution",
+            "Get Agents",
             "GET",
-            "analytics/valence-distribution",
+            "agents",
             200
         )
         
-        if not success:
-            return False
+        if success and isinstance(response, list):
+            print(f"Retrieved {len(response)} agents")
             
-        # Validate valence distribution structure
-        required_fields = ["curiosity", "certainty", "dissonance"]
-        missing_fields = [field for field in required_fields if field not in response]
-        
-        if missing_fields:
-            print(f"❌ Valence distribution missing required fields: {missing_fields}")
-            return False
-            
-        # Test cognitive timeline
-        success, response = self.run_test(
-            "Get Cognitive Timeline",
-            "GET",
-            "analytics/cognitive-timeline",
-            200
-        )
-        
-        if not success:
-            return False
-            
-        # Validate timeline structure
-        if not isinstance(response, list):
-            print("❌ Cognitive timeline should be a list")
-            return False
-            
-        if len(response) > 0:
-            event = response[0]
-            required_fields = ["timestamp", "type", "t_unit_id"]
-            missing_fields = [field for field in required_fields if field not in event]
-            
-            if missing_fields:
-                print(f"❌ Timeline event missing required fields: {missing_fields}")
-                return False
-        
-        print("✅ Analytics endpoints validation passed")
-        return True
+            # Validate agent structure
+            if len(response) > 0:
+                agent = response[0]
+                required_fields = ["id", "name", "description", "created_at"]
+                missing_fields = [field for field in required_fields if field not in agent]
+                
+                if missing_fields:
+                    print(f"❌ Agent missing required fields: {missing_fields}")
+                    return False
+                
+                # Store agent IDs for later tests
+                self.agent_ids = [agent["id"] for agent in response]
+                
+                print("✅ Agent structure validation passed")
+            return True
+        return False
         
     def test_genesis_export(self):
         """Test genesis log export"""
