@@ -298,6 +298,45 @@ function App() {
     }
   }, []);
 
+  // Fetch memory suggestions
+  const fetchMemorySuggestions = useCallback(async (tUnitId, agentId) => {
+    setIsLoadingMemory(true);
+    try {
+      const response = await axios.post(`${API}/memory/suggest`, {
+        agent_id: agentId,
+        t_unit_id: tUnitId,
+        limit: 8,
+        include_cross_agent: includeCrossAgent,
+        valence_weight: 0.25
+      });
+      setMemorySuggestions(response.data);
+      setShowMemoryPanel(true);
+    } catch (error) {
+      console.error('Error fetching memory suggestions:', error);
+      setMemorySuggestions([]);
+    } finally {
+      setIsLoadingMemory(false);
+    }
+  }, [includeCrossAgent]);
+
+  // Handle memory recall
+  const handleRecallMemory = (memorySuggestion) => {
+    // Add the recalled T-unit to selection
+    setSelectedNodes(prev => {
+      if (!prev.includes(memorySuggestion.id)) {
+        return [...prev, memorySuggestion.id];
+      }
+      return prev;
+    });
+    
+    // Track as recalled
+    setRecalledNodes(prev => {
+      if (!prev.includes(memorySuggestion.id)) {
+        return [...prev, memorySuggestion.id];
+      }
+      return prev;
+    });
+  };
   const fetchAnalytics = useCallback(async () => {
     try {
       const [valenceResponse, timelineResponse] = await Promise.all([
