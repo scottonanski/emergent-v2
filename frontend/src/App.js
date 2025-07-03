@@ -2099,6 +2099,226 @@ function App() {
             </div>
           )}
         </div>
+
+        {/* Control Panel */}
+        <div className="w-80 bg-white shadow-lg overflow-y-auto">
+          <div className="p-4 space-y-4">
+            {/* AI Toggle */}
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={useAI}
+                onChange={(e) => setUseAI(e.target.checked)}
+                className="rounded"
+              />
+              <label className="text-sm font-medium">Use AI Enhancement</label>
+            </div>
+
+            {/* Reset Layout Button */}
+            <div>
+              <button
+                onClick={resetTreeLayout}
+                className="w-full px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
+              >
+                🔄 Reset Tree Layout
+              </button>
+            </div>
+
+            {/* Selection Info */}
+            <div>
+              <h3 className="font-medium mb-2">Selected T-units: {selectedNodes.length}</h3>
+              {selectedNodes.length > 0 && (
+                <div className="text-sm text-gray-600 max-h-20 overflow-y-auto">
+                  {selectedNodes.map(id => {
+                    const tUnit = tUnits.find(t => t.id === id);
+                    return tUnit ? (
+                      <div key={id} className="mb-1 p-1 bg-gray-50 rounded">
+                        {tUnit.content.substring(0, 30)}...
+                      </div>
+                    ) : null;
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Synthesis */}
+            <div>
+              <button
+                onClick={() => setShowSynthesis(!showSynthesis)}
+                disabled={selectedNodes.length < 2}
+                className="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
+              >
+                🔄 Synthesis ({selectedNodes.length}/2+ T-units)
+              </button>
+              <AnimatePresence>
+                {showSynthesis && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-2 p-3 bg-gray-50 rounded"
+                  >
+                    <p className="text-sm mb-2">
+                      {useAI ? 'AI-powered synthesis' : 'Basic synthesis'} of selected T-units
+                      {recalledNodes.filter(id => selectedNodes.includes(id)).length > 0 && (
+                        <span className="block text-cyan-600 text-xs mt-1">
+                          💭 {recalledNodes.filter(id => selectedNodes.includes(id)).length} memory{recalledNodes.filter(id => selectedNodes.includes(id)).length > 1 ? 'ies' : 'y'} will influence this synthesis
+                        </span>
+                      )}
+                    </p>
+                    <button
+                      onClick={handleSynthesis}
+                      disabled={isLoading}
+                      className="w-full px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                    >
+                      Execute Synthesis
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Transformation */}
+            <div>
+              <button
+                onClick={() => setShowTransformation(!showTransformation)}
+                disabled={selectedNodes.length !== 1}
+                className="w-full px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 disabled:opacity-50"
+              >
+                🔄 Transform (Process Conflicts & Questions)
+              </button>
+              <AnimatePresence>
+                {showTransformation && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-2 p-3 bg-gray-50 rounded"
+                  >
+                    <p className="text-sm mb-2">
+                      Process cognitive conflicts through 5 AI-powered phases: 
+                      <br />
+                      <span className="text-xs text-gray-600">
+                        🔥 Shattering → 🧠 Remembering → 💙 Re-feeling → 🎯 Re-centering → ✨ Becoming
+                      </span>
+                      {recalledNodes.length > 0 && (
+                        <span className="block text-cyan-600 text-xs mt-1">
+                          💭 {recalledNodes.length} memory{recalledNodes.length > 1 ? 'ies' : 'y'} will influence this transformation
+                        </span>
+                      )}
+                    </p>
+                    <input
+                      type="text"
+                      placeholder="What creates tension or questions about this thought?"
+                      value={anomalyText}
+                      onChange={(e) => setAnomalyText(e.target.value)}
+                      className="w-full px-2 py-1 border rounded mb-2 text-sm"
+                    />
+                    <button
+                      onClick={handleTransformation}
+                      disabled={isLoading || !anomalyText.trim()}
+                      className="w-full px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700"
+                    >
+                      Execute Transformation
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Multi-Agent Exchange */}
+            <div>
+              <button
+                onClick={() => setShowMultiAgent(!showMultiAgent)}
+                disabled={selectedNodes.length !== 1}
+                className="w-full px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 disabled:opacity-50"
+              >
+                🤝 Send to Agent (1 T-unit)
+              </button>
+              <AnimatePresence>
+                {showMultiAgent && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-2 p-3 bg-gray-50 rounded"
+                  >
+                    <p className="text-sm mb-2">Exchange thought with another agent</p>
+                    <select
+                      value={selectedAgent}
+                      onChange={(e) => setSelectedAgent(e.target.value)}
+                      className="w-full px-2 py-1 border rounded mb-2"
+                    >
+                      <option value="">Select target agent...</option>
+                      {agents
+                        .filter(agent => {
+                          const selectedTUnit = tUnits.find(t => t.id === selectedNodes[0]);
+                          return selectedTUnit && agent.id !== selectedTUnit.agent_id;
+                        })
+                        .map(agent => (
+                          <option key={agent.id} value={agent.id}>
+                            {agent.name} ({agent.id})
+                          </option>
+                        ))}
+                    </select>
+                    <button
+                      onClick={handleMultiAgentExchange}
+                      disabled={isLoading || !selectedAgent}
+                      className="w-full px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                    >
+                      Send Thought to Agent
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Legend */}
+            <div>
+              <h3 className="font-medium mb-2">Legend</h3>
+              <div className="space-y-1 text-sm">
+                <div className="flex items-center">
+                  <div className="w-4 h-4 bg-red-400 rounded mr-2"></div>
+                  <span>High Dissonance</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-4 h-4 bg-green-400 rounded mr-2"></div>
+                  <span>High Curiosity</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-4 h-4 bg-lime-300 rounded mr-2"></div>
+                  <span>High Certainty</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-purple-500 rounded mr-2"></div>
+                  <span>AI Generated</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-cyan-500 rounded mr-2"></div>
+                  <span>Recalled Memory</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Events */}
+            <div>
+              <h3 className="font-medium mb-2">Recent Events</h3>
+              <div className="space-y-2 text-sm max-h-40 overflow-y-auto">
+                {events.slice(0, 10).map((event, index) => (
+                  <div key={event.id} className="p-2 bg-gray-50 rounded">
+                    <div className="font-medium text-xs">
+                      {event.type} 
+                      {event.metadata?.ai_generated && ' (AI)'}
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      {new Date(event.timestamp).toLocaleTimeString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Custom Reset Confirmation Modal */}
