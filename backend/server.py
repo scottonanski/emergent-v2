@@ -394,6 +394,13 @@ async def root():
 async def create_t_unit(t_unit: TUnitCreate):
     """Create a new T-unit"""
     new_t_unit = TUnit(**t_unit.dict())
+    
+    # Generate embedding for the new T-unit
+    embedding = await generate_embedding(new_t_unit.content)
+    if embedding:
+        new_t_unit.embedding = embedding
+        new_t_unit.embedding_model = "text-embedding-ada-002"
+    
     await db.t_units.insert_one(new_t_unit.dict())
     return new_t_unit
 
