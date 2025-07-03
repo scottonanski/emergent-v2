@@ -63,6 +63,7 @@ class TUnitCreate(BaseModel):
 class SynthesisRequest(BaseModel):
     t_unit_ids: List[str] = Field(min_length=2, description="At least 2 T-unit IDs for synthesis")
     use_ai: bool = Field(default=True, description="Use AI for intelligent synthesis")
+    recalled_ids: List[str] = Field(default=[], description="IDs of T-units that were recalled from memory")
 
 class TransformationRequest(BaseModel):
     t_unit_id: str = Field(description="T-unit ID to transform")
