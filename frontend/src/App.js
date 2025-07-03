@@ -303,6 +303,8 @@ function App() {
 
   // Phase 3: Agents Panel State
   const [showAgentsPanel, setShowAgentsPanel] = useState(true);
+  
+  const completeTutorial = () => {
     localStorage.setItem('hasSeenOnboarding', 'true');
     setShowTutorial(false);
     setTutorialStep(1);
