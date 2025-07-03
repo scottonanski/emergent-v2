@@ -818,9 +818,12 @@ function App() {
       setShowAgentCreation(false);
       setNewAgentName('');
       setNewAgentDescription('');
+      setSuccessMessage('Agent created successfully!');
+      setShowSuccessMessage(true);
     } catch (error) {
       console.error('Error creating agent:', error);
-      alert('Error creating agent');
+      setErrorMessage('Error creating agent');
+      setShowErrorMessage(true);
     } finally {
       setIsLoading(false);
     }
