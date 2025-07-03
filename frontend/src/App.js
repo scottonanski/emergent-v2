@@ -250,6 +250,11 @@ function App() {
   const [newAgentName, setNewAgentName] = useState('');
   const [newAgentDescription, setNewAgentDescription] = useState('');
   const [selectedAgentFilter, setSelectedAgentFilter] = useState('');
+  const [memorySuggestions, setMemorySuggestions] = useState([]);
+  const [isLoadingMemory, setIsLoadingMemory] = useState(false);
+  const [showMemoryPanel, setShowMemoryPanel] = useState(false);
+  const [includeCrossAgent, setIncludeCrossAgent] = useState(false);
+  const [recalledNodes, setRecalledNodes] = useState([]);
 
   // Custom edge styles
   const edgeOptions = {
