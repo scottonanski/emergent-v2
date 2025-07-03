@@ -276,12 +276,12 @@ The "✨ Create Thought" feature provides advanced control:
 
 ## 🔌 API Reference
 
-### Core Endpoints
+#### Core Endpoints
 
 #### T-units
 ```http
 GET    /api/t-units              # Get all T-units (with optional agent filter)
-POST   /api/t-units              # Create new T-unit
+POST   /api/t-units              # Create new T-unit with valence
 GET    /api/t-units/{id}         # Get specific T-unit
 ```
 
@@ -293,14 +293,21 @@ POST   /api/transform            # Transform T-unit through phases with memory
 
 #### Memory System
 ```http
-POST   /api/memory/suggest       # Get semantic memory suggestions
+POST   /api/memory/suggest       # Get semantic memory suggestions with similarity scores
 ```
 
 #### Multi-Agent
 ```http
 GET    /api/agents               # Get all agents
-POST   /api/agents               # Create new agent  
+POST   /api/agents               # Create new agent with custom name/description
 POST   /api/multi-agent/exchange # Exchange T-units between agents
+```
+
+#### State Management
+```http
+GET    /api/genesis/export       # Export complete state as JSON
+POST   /api/genesis/import       # Import state from file
+DELETE /api/reset-world          # Clear all data (with confirmation)
 ```
 
 #### Analytics
@@ -309,31 +316,29 @@ GET    /api/analytics/valence-distribution  # Valence statistics
 GET    /api/analytics/cognitive-timeline    # Event timeline
 ```
 
-#### State Management
-```http
-GET    /api/genesis/export       # Export complete state as JSON
-POST   /api/genesis/import       # Import state from file
-```
-
 ### Request Examples
+
+**Manual Thought Creation:**
+```json
+POST /api/t-units
+{
+  "content": "Consciousness might be a recursive pattern-recognition system",
+  "valence": {
+    "curiosity": 0.8,
+    "certainty": 0.3,
+    "dissonance": 0.6
+  },
+  "agent_id": "agent_alpha",
+  "linkage": "manual"
+}
+```
 
 **Memory-Influenced AI Synthesis:**
 ```json
 POST /api/synthesize
 {
   "t_unit_ids": ["id1", "id2", "id3"],
-  "recalled_ids": ["recalled_memory_id"],
-  "use_ai": true
-}
-```
-
-**Memory-Aware Cognitive Transformation:**
-```json
-POST /api/transform
-{
-  "t_unit_id": "target_id",
-  "anomaly": "What if consciousness is an illusion?",
-  "recalled_ids": ["related_memory_id"],
+  "recalled_ids": ["recalled_memory_id"], 
   "use_ai": true
 }
 ```
@@ -344,7 +349,7 @@ POST /api/memory/suggest
 {
   "agent_id": "agent_alpha",
   "t_unit_id": "current_thought_id",
-  "limit": 10,
+  "limit": 8,
   "include_cross_agent": false,
   "valence_weight": 0.25
 }
