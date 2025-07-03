@@ -384,9 +384,12 @@ function App() {
     const nodeMap = new Map();
     const rootNodes = [];
     
+    // Get current nodes for position preservation
+    const currentNodes = preservePositions ? nodes : [];
+    
     // Create node map, preserving existing positions if requested
     tUnits.forEach(tUnit => {
-      const existingNode = preservePositions ? nodes.find(n => n.id === tUnit.id) : null;
+      const existingNode = preservePositions ? currentNodes.find(n => n.id === tUnit.id) : null;
       nodeMap.set(tUnit.id, {
         ...tUnit,
         children: [],
