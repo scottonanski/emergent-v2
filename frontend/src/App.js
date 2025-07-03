@@ -1909,7 +1909,10 @@ function App() {
                       </div>
                       <div>
                         <h4 className="font-medium text-gray-800">Click "Synthesis" or "Transform"</h4>
-                        <p className="text-sm text-gray-600">Use Synthesis to combine multiple thoughts, or Transform to evolve a single thought through cognitive phases.</p>
+                        <p className="text-sm text-gray-600">
+                          • <strong>Synthesis:</strong> Combine multiple thoughts into new insights<br/>
+                          • <strong>Transform:</strong> Process conflicts/questions through 5 cognitive phases
+                        </p>
                       </div>
                     </div>
                     
