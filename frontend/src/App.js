@@ -567,12 +567,14 @@ function App() {
   // Create manual thought
   const createManualThought = async () => {
     if (!newThoughtContent.trim()) {
-      alert('Please enter thought content');
+      setErrorMessage('Please enter thought content');
+      setShowErrorMessage(true);
       return;
     }
 
     if (!newThoughtAgent) {
-      alert('Please select an agent');
+      setErrorMessage('Please select an agent');
+      setShowErrorMessage(true);
       return;
     }
 
@@ -598,10 +600,12 @@ function App() {
       });
       setShowCreateThought(false);
       
-      alert('Thought created successfully!');
+      setSuccessMessage('Thought created successfully!');
+      setShowSuccessMessage(true);
     } catch (error) {
       console.error('Error creating thought:', error);
-      alert('Error creating thought');
+      setErrorMessage('Error creating thought');
+      setShowErrorMessage(true);
     } finally {
       setIsLoading(false);
     }
