@@ -539,28 +539,56 @@ class CEPWebAPITester:
             return True
         return False
         
-    def test_genesis_export(self):
-        """Test genesis log export"""
-        print("\n=== Testing Genesis Log Export ===")
+    def test_analytics_endpoints(self):
+        """Test analytics endpoints"""
+        print("\n=== Testing Analytics Endpoints ===")
+        
+        # Test valence distribution
         success, response = self.run_test(
-            "Export Genesis Log",
+            "Get Valence Distribution",
             "GET",
-            "genesis/export",
+            "analytics/valence-distribution",
             200
         )
         
-        if success:
-            # Validate genesis log structure
-            required_fields = ["t_units", "events", "agents", "exported_at", "version"]
-            missing_fields = [field for field in required_fields if field not in response]
+        if not success:
+            return False
+            
+        # Validate valence distribution structure
+        required_fields = ["curiosity", "certainty", "dissonance"]
+        missing_fields = [field for field in required_fields if field not in response]
+        
+        if missing_fields:
+            print(f"❌ Valence distribution missing required fields: {missing_fields}")
+            return False
+            
+        # Test cognitive timeline
+        success, response = self.run_test(
+            "Get Cognitive Timeline",
+            "GET",
+            "analytics/cognitive-timeline",
+            200
+        )
+        
+        if not success:
+            return False
+            
+        # Validate timeline structure
+        if not isinstance(response, list):
+            print("❌ Cognitive timeline should be a list")
+            return False
+            
+        if len(response) > 0:
+            event = response[0]
+            required_fields = ["timestamp", "type", "t_unit_id"]
+            missing_fields = [field for field in required_fields if field not in event]
             
             if missing_fields:
-                print(f"❌ Genesis log missing required fields: {missing_fields}")
+                print(f"❌ Timeline event missing required fields: {missing_fields}")
                 return False
-                
-            print("✅ Genesis log export validation passed")
-            return True
-        return False
+        
+        print("✅ Analytics endpoints validation passed")
+        return True
         
     def test_get_events(self):
         """Test getting events"""
