@@ -275,6 +275,13 @@ function App() {
     certainty: 0.4,
     dissonance: 0.2
   });
+  
+  // Custom modals for sandboxed environment
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Reset tree layout (remove manual positioning)
   const resetTreeLayout = useCallback(() => {
