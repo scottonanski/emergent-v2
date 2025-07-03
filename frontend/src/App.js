@@ -622,17 +622,32 @@ function App() {
     }
 
     if (!newThoughtAgent) {
-      setErrorMessage('Please select an agent');
+      setErrorMessage('Please select an agent or create a new one');
       setShowErrorMessage(true);
       return;
     }
 
     setIsLoading(true);
     try {
+      let agentId = newThoughtAgent;
+      
+      // Create new agent if needed
+      if (newThoughtAgent === 'CREATE_NEW') {
+        const agentName = newAgentName.trim() || 'Thinker';
+        const agentResponse = await axios.post(`${API}/agents`, {
+          name: agentName,
+          description: `Created by user for manual thought creation`
+        });
+        agentId = agentResponse.data.id;
+        
+        // Refresh agents list
+        await fetchAgents();
+      }
+      
       await axios.post(`${API}/t-units`, {
         content: newThoughtContent,
         valence: newThoughtValence,
-        agent_id: newThoughtAgent,
+        agent_id: agentId,
         linkage: 'manual'
       });
       
@@ -642,6 +657,7 @@ function App() {
       // Reset form
       setNewThoughtContent('');
       setNewThoughtAgent('');
+      setNewAgentName('');
       setNewThoughtValence({
         curiosity: 0.6,
         certainty: 0.4,
