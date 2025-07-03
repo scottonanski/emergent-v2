@@ -127,7 +127,7 @@
     file: "frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "unknown"
           agent: "main"
@@ -156,6 +156,42 @@
         - working: true
           agent: "main"
           comment: "UI ENHANCEMENT: Moved memory suggestions panel from sidebar to floating overlay above the canvas. Panel now appears positioned in top-right corner with improved styling, animations, and better visual hierarchy. Enhanced with gradient headers, staggered animations, and backdrop blur effects for better UX."
+
+  - task: "Phase 1: Disable Auto-Generation Toggle"
+    implemented: false
+    working: false
+    file: "frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "Starting implementation of auto-generation toggle to prevent automatic sample data loading on app startup"
+
+  - task: "Phase 1: Reset World Button"
+    implemented: false
+    working: false
+    file: "frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "Starting implementation of reset world functionality to clear all T-units, agents, and graph state"
+
+  - task: "Phase 1: Manual Thought Input with Valence Sliders"
+    implemented: false
+    working: false
+    file: "frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "Starting implementation of advanced manual thought input with valence sliders for curiosity, certainty, and dissonance"
 
 ## metadata:
   created_by: "main_agent"
