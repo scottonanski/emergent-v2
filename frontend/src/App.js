@@ -283,6 +283,27 @@ function App() {
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
+  // Phase 2: Onboarding & Polish State
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(1);
+  const [isThinking, setIsThinking] = useState(false);
+  const [thinkingMessage, setThinkingMessage] = useState('');
+
+  // Check if user has seen onboarding
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
+    if (!hasSeenOnboarding) {
+      setShowTutorial(true);
+    }
+  }, []);
+
+  // Mark tutorial as completed
+  const completeTutorial = () => {
+    localStorage.setItem('hasSeenOnboarding', 'true');
+    setShowTutorial(false);
+    setTutorialStep(1);
+  };
+
   // Reset tree layout (remove manual positioning)
   const resetTreeLayout = useCallback(() => {
     convertTUnitsToGraph(tUnits, false);
