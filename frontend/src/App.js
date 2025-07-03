@@ -514,17 +514,20 @@ function App() {
     setEdges(graphEdges);
   }, [selectedNodes, recalledNodes, setNodes, setEdges]);
 
-  // Reset World functionality - simplified for debugging
+  // Reset World functionality - using custom modals for sandboxed environment
   const resetWorld = async () => {
     console.log('Reset World button clicked!'); // Debug log
     
-    if (!window.confirm('Are you sure you want to reset the entire world? This will delete all thoughts, agents, and events.')) {
-      console.log('Reset cancelled by user'); // Debug log
-      return;
-    }
-    
+    // Show custom confirmation modal instead of window.confirm
+    setShowResetConfirm(true);
+  };
+
+  // Handle confirmed reset
+  const handleConfirmedReset = async () => {
+    setShowResetConfirm(false);
     console.log('Starting reset...'); // Debug log
     setIsLoading(true);
+    
     try {
       // Clear database
       console.log('Calling backend reset endpoint...'); // Debug log
@@ -548,11 +551,13 @@ function App() {
       
       console.log('Local state reset complete'); // Debug log
       
-      // Show detailed success message
-      alert(`World reset successfully!\n\nCleared: ${response.data.cleared.join(', ')}\nThe canvas is now empty and ready for new thoughts.`);
+      // Show custom success message instead of alert
+      setSuccessMessage(`World reset successfully!\n\nCleared: ${response.data.cleared.join(', ')}\nThe canvas is now empty and ready for new thoughts.`);
+      setShowSuccessMessage(true);
     } catch (error) {
       console.error('Error resetting world:', error);
-      alert(`Error resetting world: ${error.response?.data?.detail || error.message}\n\nCheck the browser console for more details.`);
+      setErrorMessage(`Error resetting world: ${error.response?.data?.detail || error.message}\n\nCheck the browser console for more details.`);
+      setShowErrorMessage(true);
     } finally {
       setIsLoading(false);
       console.log('Reset operation complete'); // Debug log
