@@ -613,6 +613,33 @@ class CEPWebAPITester:
             return True
         return False
 
+    def test_get_events(self):
+        """Test getting events"""
+        print("\n=== Testing Events Retrieval ===")
+        success, response = self.run_test(
+            "Get Events",
+            "GET",
+            "events",
+            200
+        )
+        
+        if success and isinstance(response, list):
+            print(f"Retrieved {len(response)} events")
+            
+            # Validate event structure
+            if len(response) > 0:
+                event = response[0]
+                required_fields = ["id", "type", "t_unit_id", "timestamp", "metadata"]
+                missing_fields = [field for field in required_fields if field not in event]
+                
+                if missing_fields:
+                    print(f"❌ Event missing required fields: {missing_fields}")
+                    return False
+                
+                print("✅ Event structure validation passed")
+            return True
+        return False
+        
     def run_all_tests(self):
         """Run all API tests"""
         print("\n======= CEP-Web API Test Suite =======")
@@ -627,23 +654,59 @@ class CEPWebAPITester:
             print("❌ T-unit retrieval failed, stopping tests")
             return False
         
+        # Create a new T-unit
+        create_t_unit_result = self.test_create_t_unit()
+        
+        # Get a specific T-unit by ID
+        get_t_unit_by_id_result = self.test_get_t_unit_by_id()
+        
+        # Get agents
+        get_agents_result = self.test_get_agents()
+        
+        # Create a new agent
+        create_agent_result = self.test_create_agent()
+        
         # Test synthesis
         synthesis_result = self.test_synthesize()
         
         # Test transformation
         transformation_result = self.test_transformation()
         
+        # Test memory suggestions
+        memory_suggestions_result = self.test_memory_suggestions()
+        
+        # Test multi-agent exchange
+        multi_agent_exchange_result = self.test_multi_agent_exchange()
+        
+        # Test tree structure relationships
+        tree_structure_result = self.test_tree_structure()
+        
         # Get events
         events_result = self.test_get_events()
+        
+        # Test analytics endpoints
+        analytics_result = self.test_analytics_endpoints()
+        
+        # Test genesis export
+        genesis_export_result = self.test_genesis_export()
         
         # Print results
         print("\n======= Test Results =======")
         print(f"Tests passed: {self.tests_passed}/{self.tests_run}")
         print(f"Sample data initialization: {'✅' if self.test_init_sample_data else '❌'}")
         print(f"T-unit retrieval: {'✅' if self.test_get_t_units else '❌'}")
+        print(f"T-unit creation: {'✅' if create_t_unit_result else '❌'}")
+        print(f"T-unit retrieval by ID: {'✅' if get_t_unit_by_id_result else '❌'}")
+        print(f"Agent retrieval: {'✅' if get_agents_result else '❌'}")
+        print(f"Agent creation: {'✅' if create_agent_result else '❌'}")
         print(f"Synthesis operation: {'✅' if synthesis_result else '❌'}")
         print(f"Transformation operation: {'✅' if transformation_result else '❌'}")
+        print(f"Memory suggestions: {'✅' if memory_suggestions_result else '❌'}")
+        print(f"Multi-agent exchange: {'✅' if multi_agent_exchange_result else '❌'}")
+        print(f"Tree structure relationships: {'✅' if tree_structure_result else '❌'}")
         print(f"Events retrieval: {'✅' if events_result else '❌'}")
+        print(f"Analytics endpoints: {'✅' if analytics_result else '❌'}")
+        print(f"Genesis export: {'✅' if genesis_export_result else '❌'}")
         
         return self.tests_passed == self.tests_run
 
