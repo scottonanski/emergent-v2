@@ -265,11 +265,25 @@ function App() {
   const [includeCrossAgent, setIncludeCrossAgent] = useState(false);
   const [recalledNodes, setRecalledNodes] = useState([]);
 
-  // Custom edge styles
-  const edgeOptions = {
-    animated: true,
-    style: { stroke: '#1f2937', strokeWidth: 2 },
-  };
+  // Custom nodes change handler to track manual positioning
+  const handleNodesChange = useCallback((changes) => {
+    onNodesChange(changes);
+    
+    // Mark nodes as manually positioned when they're dragged
+    changes.forEach(change => {
+      if (change.type === 'position' && change.dragging === false) {
+        // Node was just released after dragging
+        setNodes(nds => nds.map(node => 
+          node.id === change.id 
+            ? { 
+                ...node, 
+                data: { ...node.data, hasManualPosition: true } 
+              }
+            : node
+        ));
+      }
+    });
+  }, [onNodesChange, setNodes]);
 
   const nodeTypes = { tunit: TUnitNode };
 
