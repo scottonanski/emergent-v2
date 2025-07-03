@@ -106,6 +106,7 @@ CEP-Web transforms abstract cognitive processes into living, interactive visuali
 - **Tab-Style Node Badges**: Clean visual indicators for AI generation, agent attribution, phases, and recall status
 - **Real-time Memory Panel**: Floating overlay with staggered animations and gradient styling
 - **Cognitive Timeline**: Track synthesis and transformation events over time
+- **🎯 Smart Camera Focus**: Automatic panning and zooming to newly created thoughts with smooth animations
 
 ### 📊 State Management & Persistence
 - **Genesis Log Export/Import**: Save and restore complete cognitive sessions as JSON
