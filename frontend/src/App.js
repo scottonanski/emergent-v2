@@ -36,49 +36,71 @@ const TUnitNode = ({ data }) => {
       initial={{ scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="px-4 py-2 shadow-lg rounded-lg border-2 bg-white max-w-xs relative overflow-hidden"
+      className="shadow-lg rounded-lg border-2 bg-white max-w-xs overflow-hidden"
       style={{ 
-        backgroundColor: getNodeColor(data.valence),
         borderColor: getNodeBorderColor(data),
         opacity: 0.85 + (getValenceIntensity(data.valence) * 0.15)
       }}
     >
       <Handle type="target" position={Position.Top} />
       
-      {/* AI Generated Badge */}
-      {data.ai_generated && (
-        <div className="absolute -top-2 -right-2 bg-purple-500 text-white text-xs px-1 py-0.5 rounded shadow-md z-10">
-          AI
-        </div>
-      )}
-      
-      {/* Agent Badge */}
-      {data.agent_id && data.agent_id !== 'default' && (
-        <div className="absolute -top-2 -left-2 bg-blue-500 text-white text-xs px-1 py-0.5 rounded shadow-md z-10">
-          {data.agent_id.split('_')[1]?.toUpperCase() || 'A'}
-        </div>
-      )}
-      
-      <div className="font-bold text-sm mb-1 text-gray-800">
-        {data.phase || 'T-Unit'}
+      {/* Tab Row */}
+      <div className="flex bg-gray-100 border-b">
+        {/* Agent Tab */}
+        {data.agent_id && data.agent_id !== 'default' && (
+          <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded-t-md mr-1">
+            {data.agent_id.split('_')[1]?.toUpperCase() || 'A'}
+          </div>
+        )}
+        
+        {/* AI Generated Tab */}
+        {data.ai_generated && (
+          <div className="bg-purple-500 text-white text-xs px-2 py-1 rounded-t-md">
+            AI
+          </div>
+        )}
+        
+        {/* Phase Tab */}
+        {data.phase && (
+          <div className="bg-blue-400 text-white text-xs px-2 py-1 rounded-t-md ml-auto">
+            {data.phase}
+          </div>
+        )}
+        
+        {/* Fill remaining space if no tabs */}
+        {!data.agent_id && !data.ai_generated && !data.phase && (
+          <div className="flex-1 bg-gray-100 text-xs px-2 py-1">
+            T-Unit
+          </div>
+        )}
       </div>
       
-      <div className="text-xs text-gray-700 mb-2 max-h-12 overflow-hidden leading-tight">
-        {data.content.substring(0, 60)}...
-      </div>
-      
-      <div className="text-xs grid grid-cols-3 gap-1 text-gray-800">
-        <div className="text-center">
-          <div className="font-semibold">C</div>
-          <div>{data.valence.curiosity.toFixed(1)}</div>
+      {/* Main Content Area */}
+      <div 
+        className="px-4 py-3"
+        style={{ backgroundColor: getNodeColor(data.valence) }}
+      >
+        <div className="font-bold text-sm mb-2 text-gray-800">
+          {data.phase || 'T-Unit'}
         </div>
-        <div className="text-center">
-          <div className="font-semibold">Ct</div>
-          <div>{data.valence.certainty.toFixed(1)}</div>
+        
+        <div className="text-xs text-gray-700 mb-3 max-h-16 overflow-hidden leading-tight">
+          {data.content.substring(0, 80)}...
         </div>
-        <div className="text-center">
-          <div className="font-semibold">D</div>
-          <div>{data.valence.dissonance.toFixed(1)}</div>
+        
+        <div className="text-xs grid grid-cols-3 gap-1 text-gray-800">
+          <div className="text-center">
+            <div className="font-semibold">C</div>
+            <div>{data.valence.curiosity.toFixed(1)}</div>
+          </div>
+          <div className="text-center">
+            <div className="font-semibold">Ct</div>
+            <div>{data.valence.certainty.toFixed(1)}</div>
+          </div>
+          <div className="text-center">
+            <div className="font-semibold">D</div>
+            <div>{data.valence.dissonance.toFixed(1)}</div>
+          </div>
         </div>
       </div>
       
