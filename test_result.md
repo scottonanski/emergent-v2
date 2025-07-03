@@ -150,6 +150,9 @@
         - working: true
           agent: "main"
           comment: "ADDITIONAL FIX: Resolved manual node positioning issue. When users manually move a tree node and then click another node, the tree no longer resets positions. Implemented position preservation by tracking hasManualPosition flag and only recalculating positions for non-manually-moved nodes. Added custom handleNodesChange handler and resetTreeLayout button for user control."
+        - working: true
+          agent: "main"
+          comment: "CRITICAL FIX: Resolved black screen issue on app reload. Problem was circular dependency in useCallback hooks - convertTUnitsToGraph was accessing nodes state but also being used in dependency arrays. Fixed by modifying function to accept currentNodes as parameter and removing circular dependencies. App now loads properly."
 
 ## metadata:
   created_by: "main_agent"
