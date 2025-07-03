@@ -956,12 +956,18 @@ function App() {
   };
 
   const handleDeleteAgent = async (agentId, agentName) => {
-    // Show confirmation in custom modal
-    if (!window.confirm(`Are you sure you want to delete agent "${agentName}"? This action cannot be undone.`)) {
-      return;
-    }
-    
+    // Set up delete confirmation state for custom modal
+    setErrorMessage(`Are you sure you want to delete agent "${agentName}"? This action cannot be undone.`);
+    setShowErrorMessage(true);
+    // Store the delete action for confirmation
+    setEditingAgent(`delete-${agentId}`);
+  };
+
+  const confirmDeleteAgent = async (agentId) => {
     setIsLoading(true);
+    setShowErrorMessage(false);
+    setEditingAgent(null);
+    
     try {
       await axios.delete(`${API}/agents/${agentId}`);
       await fetchAgents();
