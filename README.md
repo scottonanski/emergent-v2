@@ -287,16 +287,16 @@ thought structures that continuously reference and build upon themselves."
 ```
 
 ##### Transformation
-Processes single thoughts through 5 cognitive phases:
+Processes cognitive conflicts and questions through 5 AI-powered phases:
 1. **Select exactly 1 T-unit**
-2. **Enter anomaly description** (cognitive conflict or question)
+2. **Enter what creates tension or questions** about that thought
 3. **Optionally recall memories** for context
 4. **Execute transformation** to create 5 connected phase nodes:
-   - **Shattering**: Breaking down assumptions (↑ dissonance, red nodes)
-   - **Remembering**: Recalling related experiences (↑ curiosity, green nodes)  
-   - **Re-feeling**: Emotional processing (↓ dissonance)
-   - **Re-centering**: Finding new stability (↑ certainty, blue nodes)
-   - **Becoming**: Integration and emergence (balanced valence)
+   - **🔥 Shattering**: Breaking down assumptions (↑ dissonance, red nodes)
+   - **🧠 Remembering**: Recalling related experiences (↑ curiosity, green nodes)  
+   - **💙 Re-feeling**: Emotional processing (↓ dissonance)
+   - **🎯 Re-centering**: Finding new stability (↑ certainty, blue nodes)
+   - **✨ Becoming**: Integration and emergence (balanced valence)
 
 ##### Memory System
 - **Automatic Suggestions**: Selecting 1 node triggers beautiful floating memory panel
