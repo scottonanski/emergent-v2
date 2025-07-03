@@ -455,12 +455,18 @@ function App() {
 
   // Convert T-units to graph with top-down tree layout
   const convertTUnitsToGraph = useCallback((tUnits, preservePositions = false, currentNodes = []) => {
+    // Filter T-units based on selected agents
+    let filteredTUnits = tUnits;
+    if (!agentFilters.includes('all') && agentFilters.length > 0) {
+      filteredTUnits = tUnits.filter(tUnit => agentFilters.includes(tUnit.agent_id));
+    }
+    
     // Build tree structure
     const nodeMap = new Map();
     const rootNodes = [];
     
     // Create node map, preserving existing positions if requested
-    tUnits.forEach(tUnit => {
+    filteredTUnits.forEach(tUnit => {
       const existingNode = preservePositions ? currentNodes.find(n => n.id === tUnit.id) : null;
       nodeMap.set(tUnit.id, {
         ...tUnit,
@@ -472,7 +478,7 @@ function App() {
     });
     
     // Build parent-child relationships and find roots
-    tUnits.forEach(tUnit => {
+    filteredTUnits.forEach(tUnit => {
       const node = nodeMap.get(tUnit.id);
       
       if (tUnit.parents && tUnit.parents.length === 0) {
