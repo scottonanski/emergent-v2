@@ -5,38 +5,46 @@
 [![React 19](https://img.shields.io/badge/react-19-blue.svg)](https://reactjs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110.1-green.svg)](https://fastapi.tiangolo.com/)
 
-**A sophisticated AI-powered cognitive modeling platform that visualizes thought emergence, synthesis, and transformation through interactive graph networks with semantic memory and multi-agent intelligence.**
+**A sophisticated AI-powered platform for visualizing cognitive emergence, thought evolution, and consciousness modeling through interactive graph networks with semantic memory and multi-agent intelligence.**
 
-CEP-Web transforms abstract cognitive processes into living, visual representations where thoughts (T-units) evolve, combine, and transform through valence-driven interactions enhanced by GPT-4 intelligence and semantic memory recall.
+CEP-Web transforms abstract cognitive processes into living, interactive visualizations where thoughts (T-units) evolve, synthesize, and transform through AI-enhanced operations with intelligent memory recall and multi-agent collaboration.
 
 ## ✨ Core Features
+
+### 🎯 **Intuitive User Experience**
+- **🔘 Auto-Generation Toggle**: Control automatic sample data loading - no more overwhelming data on startup
+- **🌍 Reset World**: Instantly clear all data with beautiful confirmation dialogs for fresh starts
+- **✨ Create Thought**: Manual thought input with advanced valence sliders for precise emotional fingerprinting
+- **🧠 Tree Layout**: Clean hierarchical visualization showing cognitive lineage and evolution
+- **💭 Floating Memory Panel**: Elegant overlay showing semantic memory suggestions above the canvas
 
 ### 🤖 AI-Powered Cognitive Operations
 - **GPT-4 Enhanced Synthesis**: Intelligent combination of multiple T-units into coherent emergent thoughts
 - **AI-Driven Transformation**: Context-aware evolution through 5 cognitive phases (Shattering, Remembering, Re-feeling, Re-centering, Becoming)
-- **Memory-Influenced Processing**: Past insights actively shape new cognitive operations
+- **Memory-Influenced Processing**: Past insights actively shape new cognitive operations through semantic recall
 - **Smart Valence Analysis**: AI-generated emotional/cognitive states with dynamic adaptation
 
 ### 🧠 Semantic Memory System
 - **OpenAI Embeddings**: Automatic semantic similarity detection using text-embedding-ada-002
-- **Memory Suggestions**: Context-aware recall of related past thoughts
-- **Interactive Memory Recall**: One-click integration of memories into current cognitive operations
+- **Interactive Memory Suggestions**: Beautiful floating panel with real-time recall suggestions and similarity scores
+- **One-Click Memory Recall**: Seamlessly integrate past thoughts into current cognitive operations
 - **Cross-Agent Memory**: Optional memory sharing between different cognitive agents
 - **Valence-Driven Memory**: Emotional resonance influences memory retrieval and integration
 
 ### 🌐 Multi-Agent Cognitive Networks
-- **Agent Creation**: Dynamic creation of specialized cognitive agents
-- **Agent Attribution**: Visual tracking of which agent created each thought
-- **Cross-Agent Exchange**: Thoughts can be shared between different cognitive agents
-- **Cognitive Specialization**: Agents develop unique thinking patterns and expertise
+- **Dynamic Agent Creation**: Create specialized cognitive agents with custom names and descriptions
+- **Agent Attribution**: Visual tracking of which agent created each thought with color-coded badges
+- **Cross-Agent Exchange**: Share thoughts between different cognitive agents
+- **Cognitive Specialization**: Agents develop unique thinking patterns and expertise over time
 - **Agent Filtering**: View cognitive networks by specific agent or all agents
 
 ### 🎨 Advanced Visualizations
-- **Tree Layout Graph**: Hierarchical visualization showing cognitive lineage and evolution
+- **Interactive Tree Layout**: Hierarchical graph showing parent-child cognitive relationships
+- **Manual Node Positioning**: Drag nodes to custom positions - they stay put when clicking others
 - **Valence-Based Coloring**: Nodes colored by dominant emotional/cognitive state
-- **Interactive Memory Panel**: Real-time suggestions with similarity scores and recall functionality
+- **Tab-Style Node Badges**: Clean visual indicators for AI generation, agent attribution, phases, and recall status
+- **Real-time Memory Panel**: Floating overlay with staggered animations and gradient styling
 - **Cognitive Timeline**: Track synthesis and transformation events over time
-- **Multi-dimensional Analytics**: Statistics on AI generation, agent activities, and cognitive patterns
 
 ### 📊 State Management & Persistence
 - **Genesis Log Export/Import**: Save and restore complete cognitive sessions as JSON
