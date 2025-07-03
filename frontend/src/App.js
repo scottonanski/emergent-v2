@@ -578,7 +578,7 @@ function App() {
 
     setNodes(graphNodes);
     setEdges(graphEdges);
-  }, [selectedNodes, recalledNodes, setNodes, setEdges]);
+  }, [selectedNodes, recalledNodes, setNodes, setEdges, agentFilters]);
 
   // Reset World functionality - using custom modals for sandboxed environment
   const resetWorld = async () => {
