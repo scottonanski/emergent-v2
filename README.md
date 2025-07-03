@@ -217,9 +217,11 @@ yarn start
 
 6. **First-Time Setup**
 Navigate to `http://localhost:3000` and:
-- **Optional**: Enable "Auto-generate on load" checkbox for sample data
-- **Or**: Click "Initialize Sample Data" manually to populate with examples  
-- **Or**: Click "✨ Create Thought" to start with your own thoughts
+- **🎓 Tutorial**: A welcome tutorial will appear automatically on first visit
+- **🎯 Quick Start**: Follow the 3-step guide: Select thoughts → Click Synthesis/Transform → Watch evolution
+- **✨ Create Your Own**: Click "Create Thought" to add your own ideas with custom valence settings
+- **📊 Sample Data**: Click "Initialize Sample Data" if you want to explore with examples  
+- **❓ Help**: Click the help button (bottom-left) anytime to revisit the tutorial
 
 ## 📖 Usage Guide
 
