@@ -879,7 +879,8 @@ function App() {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error exporting data:', error);
-      alert('Error exporting data');
+      setErrorMessage('Error exporting data');
+      setShowErrorMessage(true);
     }
   };
 
