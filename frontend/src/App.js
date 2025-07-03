@@ -1498,6 +1498,7 @@ function App() {
           {activeTab === 'graph' && (
             <>
               <ReactFlow
+                ref={reactFlowInstance}
                 nodes={nodes}
                 edges={edges}
                 onNodesChange={handleNodesChange}
