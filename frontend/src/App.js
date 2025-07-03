@@ -277,9 +277,11 @@ function App() {
         }
       }))
     );
-    // Trigger layout recalculation
-    convertTUnitsToGraph(tUnits, false);
-  }, [setNodes, convertTUnitsToGraph, tUnits]);
+    // Force layout recalculation after state update
+    setTimeout(() => {
+      convertTUnitsToGraph(tUnits, false);
+    }, 0);
+  }, [setNodes, tUnits]);
 
   // Custom nodes change handler to track manual positioning
   const handleNodesChange = useCallback((changes) => {
