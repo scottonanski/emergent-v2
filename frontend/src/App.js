@@ -1338,9 +1338,238 @@ function App() {
       </div>
 
       <div className="flex-1 flex">
-        {/* Control Panel */}
-        <div className="w-80 bg-white shadow-lg overflow-y-auto">
-          <div className="p-4 space-y-4">
+        {/* Dedicated Agents Panel */}
+        <AnimatePresence>
+          {showAgentsPanel && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 320, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold">🤖 Cognitive Agents</h2>
+                <button
+                  onClick={() => setShowAgentsPanel(false)}
+                  className="text-white hover:text-gray-200 text-sm"
+                >
+                  ←
+                </button>
+              </div>
+
+              {/* Agent Filter Chips */}
+              <div className="mb-4">
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => handleToggleAgentFilter('all')}
+                    className={`px-3 py-1 text-sm rounded-full transition-all ${
+                      agentFilters.includes('all')
+                        ? 'bg-white text-indigo-600 shadow-md'
+                        : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30'
+                    }`}
+                  >
+                    🌐 All
+                  </button>
+                  {agentsWithStats.slice(0, 3).map(agent => (
+                    <button
+                      key={agent.id}
+                      onClick={() => handleToggleAgentFilter(agent.id)}
+                      className={`px-3 py-1 text-sm rounded-full transition-all flex items-center gap-2 ${
+                        agentFilters.includes(agent.id)
+                          ? 'bg-white text-indigo-600 shadow-md'
+                          : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30'
+                      }`}
+                    >
+                      <span>{agent.avatar}</span>
+                      <span className="max-w-20 truncate">{agent.name}</span>
+                      <span className="bg-white bg-opacity-30 rounded-full px-2 text-xs">
+                        {agent.thought_count}
+                      </span>
+                    </button>
+                  ))}
+                  {agentsWithStats.length > 3 && (
+                    <span className="text-sm text-white text-opacity-70 px-2 py-1">
+                      +{agentsWithStats.length - 3} more
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Agent List */}
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {agentsWithStats.map(agent => (
+                  <motion.div
+                    key={agent.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white bg-opacity-10 rounded-lg p-3 hover:bg-opacity-20 transition-all"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div 
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0"
+                          style={{ backgroundColor: agent.color }}
+                        >
+                          {agent.avatar}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          {editingAgent === agent.id ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={editingAgentName}
+                                onChange={(e) => setEditingAgentName(e.target.value)}
+                                className="text-sm font-medium bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 w-32"
+                                onKeyPress={(e) => e.key === 'Enter' && handleSaveAgentEdit(agent.id)}
+                                autoFocus
+                              />
+                              <button
+                                onClick={() => handleSaveAgentEdit(agent.id)}
+                                className="text-green-300 hover:text-green-100 text-sm"
+                              >
+                                ✓
+                              </button>
+                              <button
+                                onClick={handleCancelAgentEdit}
+                                className="text-red-300 hover:text-red-100 text-sm"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ) : (
+                            <div>
+                              <div className="font-medium text-white truncate">{agent.name}</div>
+                              <div className="text-xs text-white text-opacity-70 truncate">{agent.description}</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {editingAgent !== agent.id && (
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <button
+                            onClick={() => handleFocusAgent(agent.id)}
+                            className="text-white hover:text-yellow-200 text-sm p-1 rounded hover:bg-white hover:bg-opacity-10"
+                            title="Focus"
+                          >
+                            🎯
+                          </button>
+                          <button
+                            onClick={() => handleEditAgent(agent)}
+                            className="text-white hover:text-blue-200 text-sm p-1 rounded hover:bg-white hover:bg-opacity-10"
+                            title="Rename"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => handleDeleteAgent(agent.id, agent.name)}
+                            className="text-white hover:text-red-200 text-sm p-1 rounded hover:bg-white hover:bg-opacity-10"
+                            title="Delete"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div className="text-center">
+                        <div className="font-semibold text-white">{agent.thought_count}</div>
+                        <div className="text-white text-opacity-70">Thoughts</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-semibold text-white">
+                          {new Date(agent.created_at).toLocaleDateString('en', {month: 'short', day: 'numeric'})}
+                        </div>
+                        <div className="text-white text-opacity-70">Created</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-semibold text-white">
+                          {agent.last_activity ? new Date(agent.last_activity).toLocaleDateString('en', {month: 'short', day: 'numeric'}) : 'Never'}
+                        </div>
+                        <div className="text-white text-opacity-70">Active</div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+              
+              {/* Create Agent Button */}
+              <div className="mt-4">
+                <button
+                  onClick={() => setShowAgentCreation(!showAgentCreation)}
+                  className="w-full px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-all"
+                >
+                  ✨ Create New Agent
+                </button>
+                
+                {/* Agent Creation Form */}
+                <AnimatePresence>
+                  {showAgentCreation && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-3 p-3 bg-white bg-opacity-10 rounded-lg"
+                    >
+                      <input
+                        type="text"
+                        placeholder="Agent name..."
+                        value={newAgentName}
+                        onChange={(e) => setNewAgentName(e.target.value)}
+                        className="w-full px-3 py-2 bg-white text-gray-800 border border-gray-300 rounded mb-2 text-sm"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Agent description..."
+                        value={newAgentDescription}
+                        onChange={(e) => setNewAgentDescription(e.target.value)}
+                        className="w-full px-3 py-2 bg-white text-gray-800 border border-gray-300 rounded mb-3 text-sm"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleCreateAgent}
+                          disabled={isLoading || !newAgentName.trim()}
+                          className="flex-1 px-3 py-2 bg-white text-indigo-600 rounded hover:bg-opacity-90 text-sm font-medium"
+                        >
+                          Create
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowAgentCreation(false);
+                            setNewAgentName('');
+                            setNewAgentDescription('');
+                          }}
+                          className="px-3 py-2 bg-white bg-opacity-20 text-white rounded hover:bg-opacity-30 text-sm"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Toggle Button when collapsed */}
+        {!showAgentsPanel && (
+          <button
+            onClick={() => setShowAgentsPanel(true)}
+            className="w-12 bg-gradient-to-b from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:from-indigo-700 hover:to-purple-700 transition-all"
+            title="Show Agents Panel"
+          >
+            🤖
+          </button>
+        )}
+
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col">
+          {/* Main Canvas */}
+          <div className="flex-1 relative">
+            {activeTab === 'graph' && (
             {/* AI Toggle */}
             <div className="flex items-center space-x-2">
               <input
