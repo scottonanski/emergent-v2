@@ -85,6 +85,20 @@ class AgentInfo(BaseModel):
     description: str = Field(description="Agent description")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     active: bool = Field(default=True)
+    avatar: str = Field(default="🤖", description="Agent avatar emoji")
+    color: str = Field(default="#6366f1", description="Agent theme color")
+    
+    # Auto-assign avatar and color if not provided
+    def __init__(self, **data):
+        super().__init__(**data)
+        if 'avatar' not in data:
+            avatars = ["🤖", "🧠", "👤", "🌀", "⚡", "🔮", "🎭", "🦋"]
+            import random
+            self.avatar = random.choice(avatars)
+        if 'color' not in data:
+            colors = ["#6366f1", "#8b5cf6", "#ec4899", "#06b6d4", "#10b981", "#f59e0b", "#ef4444", "#84cc16"]
+            import random
+            self.color = random.choice(colors)
 
 class MultiAgentExchange(BaseModel):
     source_agent_id: str
