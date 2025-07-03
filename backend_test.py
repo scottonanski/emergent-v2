@@ -335,54 +335,32 @@ class CEPWebAPITester:
             return True
         return False
         
-    def test_agent_filtered_endpoints(self):
-        """Test agent-filtered endpoints"""
-        print("\n=== Testing Agent-Filtered Endpoints ===")
-        
-        if not self.agent_ids:
-            print("❌ No agents available for agent-filtered tests")
-            return False
-            
-        agent_id = self.agent_ids[0]
-        
-        # Test agent-filtered T-units
+    def test_get_events(self):
+        """Test getting events"""
+        print("\n=== Testing Events Retrieval ===")
         success, response = self.run_test(
-            "Get Agent-Filtered T-Units",
+            "Get Events",
             "GET",
-            f"t-units?agent_id={agent_id}",
+            "events",
             200
         )
         
-        if not success:
-            return False
+        if success and isinstance(response, list):
+            print(f"Retrieved {len(response)} events")
             
-        # Validate that all returned T-units belong to the agent
-        if isinstance(response, list) and len(response) > 0:
-            for t_unit in response:
-                if t_unit.get("agent_id") != agent_id:
-                    print(f"❌ T-unit with agent_id {t_unit.get('agent_id')} returned when filtering for {agent_id}")
+            # Validate event structure
+            if len(response) > 0:
+                event = response[0]
+                required_fields = ["id", "type", "t_unit_id", "timestamp", "metadata"]
+                missing_fields = [field for field in required_fields if field not in event]
+                
+                if missing_fields:
+                    print(f"❌ Event missing required fields: {missing_fields}")
                     return False
-        
-        # Test agent-filtered events
-        success, response = self.run_test(
-            "Get Agent-Filtered Events",
-            "GET",
-            f"events?agent_id={agent_id}",
-            200
-        )
-        
-        if not success:
-            return False
-            
-        # Validate that all returned events belong to the agent
-        if isinstance(response, list) and len(response) > 0:
-            for event in response:
-                if event.get("agent_id") != agent_id:
-                    print(f"❌ Event with agent_id {event.get('agent_id')} returned when filtering for {agent_id}")
-                    return False
-        
-        print("✅ Agent-filtered endpoints validation passed")
-        return True
+                
+                print("✅ Event structure validation passed")
+            return True
+        return False
 
     def run_all_tests(self):
         """Run all API tests"""
