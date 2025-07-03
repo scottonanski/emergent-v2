@@ -553,12 +553,18 @@ function App() {
 
   // Convert T-units to graph with tree layout
   const convertTUnitsToGraph = useCallback((tUnits, preservePositions = false, currentNodes = []) => {
+    // Filter T-units based on agent filters
+    let filteredTUnits = tUnits;
+    if (!agentFilters.includes('all') && agentFilters.length > 0) {
+      filteredTUnits = tUnits.filter(tUnit => agentFilters.includes(tUnit.agent_id));
+    }
+
     // Build tree structure
     const nodeMap = new Map();
     const rootNodes = [];
     
     // Create node map, preserving existing positions if requested
-    tUnits.forEach(tUnit => {
+    filteredTUnits.forEach(tUnit => {
       const existingNode = preservePositions ? currentNodes.find(n => n.id === tUnit.id) : null;
       nodeMap.set(tUnit.id, {
         ...tUnit,
@@ -570,13 +576,13 @@ function App() {
     });
     
     // Build parent-child relationships and find roots
-    tUnits.forEach(tUnit => {
+    filteredTUnits.forEach(tUnit => {
       const node = nodeMap.get(tUnit.id);
       
       if (tUnit.parents.length === 0) {
         rootNodes.push(node);
       } else {
-        // Add to parent's children
+        // Add to parent's children (only if parent is in filtered set)
         tUnit.parents.forEach(parentId => {
           const parent = nodeMap.get(parentId);
           if (parent) {
@@ -667,7 +673,7 @@ function App() {
 
     setNodes(graphNodes);
     setEdges(graphEdges);
-  }, [selectedNodes, recalledNodes, setNodes, setEdges]);
+  }, [selectedNodes, recalledNodes, agentFilters, setNodes, setEdges]);
 
   // Reset World functionality - using custom modals for sandboxed environment
   const resetWorld = async () => {
