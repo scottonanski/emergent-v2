@@ -1787,8 +1787,10 @@ function App() {
         </div>
       </div>
       
-      {/* Control Panel */}
-              <div className="p-4">
+      <div className="flex-1 flex">
+        {/* Control Panel would go here but this section seems to be timeline content */}
+        {activeTab === 'timeline' && (
+          <div className="p-4">
                 <h2 className="text-xl font-bold mb-4">Event Timeline</h2>
                 <div className="space-y-4">
                   {events.map((event, index) => (
