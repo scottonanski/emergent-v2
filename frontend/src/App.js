@@ -2225,7 +2225,7 @@ function App() {
           )}
         </div>
       </div>
-      
+
       {/* Custom Reset Confirmation Modal */}
       <AnimatePresence>
         {showResetConfirm && (
