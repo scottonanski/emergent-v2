@@ -1786,6 +1786,19 @@ function App() {
           </div>
         </div>
       </div>
+                <h2 className="text-xl font-bold">Analytics</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white p-4 rounded-lg shadow">
+                    <h3 className="text-lg font-medium mb-4">Valence Distribution</h3>
+                    <ValenceRadarChart valenceData={valenceData} />
+                  </div>
+                  <div className="bg-white p-4 rounded-lg shadow">
+                    <h3 className="text-lg font-medium mb-4">Cognitive Timeline</h3>
+                    <CognitiveTimeline events={events} />
+                  </div>
+                </div>
+              </div>
+            )}
             {activeTab === 'timeline' && (
               <div className="p-4">
                 <h2 className="text-xl font-bold mb-4">Event Timeline</h2>
