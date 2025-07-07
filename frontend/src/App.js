@@ -1786,7 +1786,8 @@ function App() {
           </div>
         </div>
       </div>
-            {activeTab === 'timeline' && (
+      
+      {/* Control Panel */}
               <div className="p-4">
                 <h2 className="text-xl font-bold mb-4">Event Timeline</h2>
                 <div className="space-y-4">
