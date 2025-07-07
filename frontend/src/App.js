@@ -1830,10 +1830,9 @@ function App() {
             )}
           </div>
         </div>
-      </div>
-      
-      {/* Control Panel */}
-      <div className="w-80 bg-white shadow-lg overflow-y-auto">
+        
+        {/* Control Panel */}
+        <div className="w-80 bg-white shadow-lg overflow-y-auto">
           <div className="p-4 space-y-4">
             {/* AI Toggle */}
             <div className="flex items-center space-x-2">
