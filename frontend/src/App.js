@@ -1800,7 +1800,7 @@ function App() {
               </div>
             )}
           </div>
-        </div>>
+        </div>
         
         {/* Control Panel */}
         <div className="w-80 bg-white shadow-lg overflow-y-auto">
