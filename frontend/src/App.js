@@ -1799,37 +1799,8 @@ function App() {
                 </div>
               </div>
             )}
-            {activeTab === 'timeline' && (
-              <div className="p-4">
-                <h2 className="text-xl font-bold mb-4">Event Timeline</h2>
-                <div className="space-y-4">
-                  {events.map((event, index) => (
-                    <div key={event.id} className="bg-white p-4 rounded-lg shadow">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <div className="font-medium">{event.type}</div>
-                          <div className="text-sm text-gray-600">
-                            {new Date(event.timestamp).toLocaleString()}
-                          </div>
-                        </div>
-                        {event.metadata?.ai_generated && (
-                          <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
-                            AI Generated
-                          </span>
-                        )}
-                      </div>
-                      {event.metadata && (
-                        <pre className="mt-2 text-sm bg-gray-50 p-2 rounded overflow-x-auto">
-                          {JSON.stringify(event.metadata, null, 2)}
-                        </pre>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
-        </div>
+        </div>>
         
         {/* Control Panel */}
         <div className="w-80 bg-white shadow-lg overflow-y-auto">
