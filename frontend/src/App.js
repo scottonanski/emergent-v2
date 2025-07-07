@@ -1786,11 +1786,8 @@ function App() {
           </div>
         </div>
       </div>
-      
-      <div className="flex-1 flex">
-        {/* Control Panel would go here but this section seems to be timeline content */}
-        {activeTab === 'timeline' && (
-          <div className="p-4">
+            {activeTab === 'timeline' && (
+              <div className="p-4">
                 <h2 className="text-xl font-bold mb-4">Event Timeline</h2>
                 <div className="space-y-4">
                   {events.map((event, index) => (
@@ -1820,9 +1817,10 @@ function App() {
             )}
           </div>
         </div>
-        
-        {/* Control Panel */}
-        <div className="w-80 bg-white shadow-lg overflow-y-auto">
+      </div>
+      
+      {/* Control Panel */}
+      <div className="w-80 bg-white shadow-lg overflow-y-auto">
           <div className="p-4 space-y-4">
             {/* AI Toggle */}
             <div className="flex items-center space-x-2">
