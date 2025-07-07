@@ -1788,7 +1788,7 @@ function App() {
       </div>
       
       {/* Control Panel */}
-              <div className="p-4">
+      <div className="w-80 bg-white shadow-lg overflow-y-auto">
                 <h2 className="text-xl font-bold mb-4">Event Timeline</h2>
                 <div className="space-y-4">
                   {events.map((event, index) => (
