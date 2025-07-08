@@ -1568,7 +1568,7 @@ function App() {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col h-full overflow-hidden">
           {/* Main Canvas */}
-          <div className="flex-1 relative overflow-hidden" style={{ height: 'calc(100vh - 120px)' }}>
+          <div className="flex-1 relative overflow-hidden" style={{ height: 'calc(100vh - 110px)' }}>
             {activeTab === 'graph' && (
               <>
                 <ReactFlow
