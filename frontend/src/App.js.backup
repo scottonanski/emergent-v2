@@ -255,14 +255,10 @@ function App() {
   const [useAI, setUseAI] = useState(true);
   const [showImportExport, setShowImportExport] = useState(false);
   const [agents, setAgents] = useState([]);
-  const [agentsWithStats, setAgentsWithStats] = useState([]);
   const [showAgentCreation, setShowAgentCreation] = useState(false);
   const [newAgentName, setNewAgentName] = useState('');
   const [newAgentDescription, setNewAgentDescription] = useState('');
   const [selectedAgentFilter, setSelectedAgentFilter] = useState('');
-  const [agentFilters, setAgentFilters] = useState(['all']); // For multi-select filtering
-  const [editingAgent, setEditingAgent] = useState(null);
-  const [editingAgentName, setEditingAgentName] = useState('');
   const [memorySuggestions, setMemorySuggestions] = useState([]);
   const [isLoadingMemory, setIsLoadingMemory] = useState(false);
   const [showMemoryPanel, setShowMemoryPanel] = useState(false);
@@ -293,6 +289,13 @@ function App() {
   const [isThinking, setIsThinking] = useState(false);
   const [thinkingMessage, setThinkingMessage] = useState('');
 
+  // Phase 3: Enhanced Agent Panel State
+  const [showAgentsPanel, setShowAgentsPanel] = useState(true);
+  const [agentsWithStats, setAgentsWithStats] = useState([]);
+  const [agentFilters, setAgentFilters] = useState(['all']);
+  const [editingAgent, setEditingAgent] = useState(null);
+  const [editingAgentName, setEditingAgentName] = useState('');
+
   // Check if user has seen onboarding
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
@@ -301,9 +304,7 @@ function App() {
     }
   }, []);
 
-  // Phase 3: Agents Panel State
-  const [showAgentsPanel, setShowAgentsPanel] = useState(true);
-  
+  // Mark tutorial as completed
   const completeTutorial = () => {
     localStorage.setItem('hasSeenOnboarding', 'true');
     setShowTutorial(false);
@@ -394,14 +395,109 @@ function App() {
     try {
       const response = await axios.get(`${API}/agents`);
       setAgents(response.data);
-      
-      // Also fetch agents with stats for the enhanced panel
-      const statsResponse = await axios.get(`${API}/agents/stats`);
-      setAgentsWithStats(statsResponse.data);
     } catch (error) {
       console.error('Error fetching agents:', error);
     }
   }, []);
+
+  // Fetch agents with statistics
+  const fetchAgentsWithStats = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API}/agents/stats`);
+      setAgentsWithStats(response.data);
+    } catch (error) {
+      console.error('Error fetching agents with stats:', error);
+    }
+  }, []);
+
+  // Enhanced Agent Management Functions
+  const handleToggleAgentFilter = (agentId) => {
+    if (agentId === 'all') {
+      setAgentFilters(['all']);
+      setSelectedAgentFilter('');
+    } else {
+      setAgentFilters(prev => {
+        const newFilters = prev.includes(agentId) 
+          ? prev.filter(id => id !== agentId)
+          : [...prev.filter(id => id !== 'all'), agentId];
+        
+        // Update global agent filter for backward compatibility
+        setSelectedAgentFilter(newFilters.length === 1 ? newFilters[0] : '');
+        
+        return newFilters.length === 0 ? ['all'] : newFilters;
+      });
+    }
+  };
+
+  const handleEditAgent = (agent) => {
+    setEditingAgent(agent.id);
+    setEditingAgentName(agent.name);
+  };
+
+  const handleSaveAgentEdit = async (agentId) => {
+    if (!editingAgentName.trim()) return;
+    
+    try {
+      await axios.put(`${API}/agents/${agentId}`, {
+        name: editingAgentName.trim()
+      });
+      await fetchAgentsWithStats();
+      setEditingAgent(null);
+      setEditingAgentName('');
+      setSuccessMessage('Agent renamed successfully!');
+      setShowSuccessMessage(true);
+    } catch (error) {
+      console.error('Error renaming agent:', error);
+      setErrorMessage('Error renaming agent');
+      setShowErrorMessage(true);
+    }
+  };
+
+  const handleCancelAgentEdit = () => {
+    setEditingAgent(null);
+    setEditingAgentName('');
+  };
+
+  const handleDeleteAgent = (agentId, agentName) => {
+    // Use custom modal for confirmation
+    setErrorMessage(`Are you sure you want to delete agent "${agentName}"?\n\nThis will remove the agent but keep all their thoughts in the system.`);
+    setShowErrorMessage(true);
+    
+    // Store delete info for confirmation
+    window.pendingAgentDelete = { agentId, agentName };
+  };
+
+  const handleConfirmDeleteAgent = async () => {
+    if (!window.pendingAgentDelete) return;
+    
+    const { agentId, agentName } = window.pendingAgentDelete;
+    
+    try {
+      await axios.delete(`${API}/agents/${agentId}`);
+      await fetchAgentsWithStats();
+      
+      // Remove from filters if present
+      setAgentFilters(prev => prev.filter(id => id !== agentId));
+      if (selectedAgentFilter === agentId) {
+        setSelectedAgentFilter('');
+      }
+      
+      setSuccessMessage(`Agent "${agentName}" deleted successfully!`);
+      setShowSuccessMessage(true);
+    } catch (error) {
+      console.error('Error deleting agent:', error);
+      setErrorMessage('Error deleting agent');
+      setShowErrorMessage(true);
+    } finally {
+      delete window.pendingAgentDelete;
+    }
+  };
+
+  const handleFocusAgent = (agentId) => {
+    // Single agent filter and update UI
+    setSelectedAgentFilter(agentId);
+    setAgentFilters([agentId]);
+  };
 
   // Fetch memory suggestions
   const fetchMemorySuggestions = useCallback(async (tUnitId, agentId) => {
@@ -455,14 +551,14 @@ function App() {
     }
   }, []);
 
-  // Convert T-units to graph with top-down tree layout
+  // Convert T-units to graph with tree layout
   const convertTUnitsToGraph = useCallback((tUnits, preservePositions = false, currentNodes = []) => {
-    // Filter T-units based on selected agents
+    // Filter T-units based on agent filters
     let filteredTUnits = tUnits;
     if (!agentFilters.includes('all') && agentFilters.length > 0) {
       filteredTUnits = tUnits.filter(tUnit => agentFilters.includes(tUnit.agent_id));
     }
-    
+
     // Build tree structure
     const nodeMap = new Map();
     const rootNodes = [];
@@ -483,23 +579,20 @@ function App() {
     filteredTUnits.forEach(tUnit => {
       const node = nodeMap.get(tUnit.id);
       
-      if (tUnit.parents && tUnit.parents.length === 0) {
+      if (tUnit.parents.length === 0) {
         rootNodes.push(node);
-      } else if (tUnit.parents && tUnit.parents.length > 0) {
-        // Add to parent's children
+      } else {
+        // Add to parent's children (only if parent is in filtered set)
         tUnit.parents.forEach(parentId => {
           const parent = nodeMap.get(parentId);
           if (parent) {
             parent.children.push(node);
           }
         });
-      } else {
-        // If no parents array or undefined, treat as root
-        rootNodes.push(node);
       }
     });
     
-    // Calculate levels (depth from root) - cascading DOWN
+    // Calculate levels (depth from root)
     const calculateLevels = (node, level = 0) => {
       node.level = level;
       node.children.forEach(child => {
@@ -509,7 +602,7 @@ function App() {
     
     rootNodes.forEach(root => calculateLevels(root));
     
-    // Group nodes by level for top-down layout
+    // Group nodes by level
     const levels = new Map();
     Array.from(nodeMap.values()).forEach(node => {
       if (!levels.has(node.level)) {
@@ -518,23 +611,23 @@ function App() {
       levels.get(node.level).push(node);
     });
     
-    // Calculate positions for top-down tree layout
-    const levelHeight = 250;  // Increased vertical spacing between levels  
-    const nodeSpacing = 280;  // Horizontal spacing between nodes
-    const topMargin = 100;    // Top margin for initial thoughts
+    // Calculate positions for tree layout (only for nodes without manual positions)
+    const levelHeight = 200;  // Vertical spacing between levels
+    const nodeWidth = 300;    // Horizontal spacing between nodes
+    const startY = 50;        // Top margin
     
-    // Position nodes level by level, cascading DOWN from top
+    // Position nodes level by level
     levels.forEach((nodesInLevel, level) => {
-      const y = topMargin + (level * levelHeight);  // Each level goes further DOWN
-      const totalWidth = nodesInLevel.length * nodeSpacing;
-      const startX = -totalWidth / 2;  // Center each level horizontally
+      const y = startY + (level * levelHeight);
+      const totalWidth = nodesInLevel.length * nodeWidth;
+      const startX = -totalWidth / 2;  // Center the level
       
       nodesInLevel.forEach((node, index) => {
         // Only update position if node doesn't have a manual position
         if (!node.hasManualPosition) {
           node.position = {
-            x: startX + (index * nodeSpacing) + (nodeSpacing / 2),
-            y: y  // Cascading DOWN: Level 0 at top, Level 1 below, etc.
+            x: startX + (index * nodeWidth) + (nodeWidth / 2),
+            y: y
           };
         }
       });
@@ -580,7 +673,7 @@ function App() {
 
     setNodes(graphNodes);
     setEdges(graphEdges);
-  }, [selectedNodes, recalledNodes, setNodes, setEdges, agentFilters]);
+  }, [selectedNodes, recalledNodes, agentFilters, setNodes, setEdges]);
 
   // Reset World functionality - using custom modals for sandboxed environment
   const resetWorld = async () => {
@@ -833,7 +926,7 @@ function App() {
         name: newAgentName,
         description: newAgentDescription
       });
-      await fetchAgents();
+      await Promise.all([fetchAgents(), fetchAgentsWithStats()]);
       setShowAgentCreation(false);
       setNewAgentName('');
       setNewAgentDescription('');
@@ -930,100 +1023,11 @@ function App() {
     }
   };
 
-  // Enhanced Agent Management Functions
-  const handleEditAgent = (agent) => {
-    setEditingAgent(agent.id);
-    setEditingAgentName(agent.name);
-  };
-
-  const handleSaveAgentEdit = async (agentId) => {
-    if (!editingAgentName.trim()) return;
-    
-    setIsLoading(true);
-    try {
-      await axios.put(`${API}/agents/${agentId}`, {
-        name: editingAgentName.trim()
-      });
-      await fetchAgents();
-      setEditingAgent(null);
-      setEditingAgentName('');
-      setSuccessMessage('Agent renamed successfully!');
-      setShowSuccessMessage(true);
-    } catch (error) {
-      console.error('Error updating agent:', error);
-      setErrorMessage('Error updating agent');
-      setShowErrorMessage(true);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCancelAgentEdit = () => {
-    setEditingAgent(null);
-    setEditingAgentName('');
-  };
-
-  const handleDeleteAgent = async (agentId, agentName) => {
-    // Set up delete confirmation state for custom modal
-    setErrorMessage(`Are you sure you want to delete agent "${agentName}"? This action cannot be undone.`);
-    setShowErrorMessage(true);
-    // Store the delete action for confirmation
-    setEditingAgent(`delete-${agentId}`);
-  };
-
-  const confirmDeleteAgent = async (agentId) => {
-    setIsLoading(true);
-    setShowErrorMessage(false);
-    setEditingAgent(null);
-    
-    try {
-      await axios.delete(`${API}/agents/${agentId}`);
-      await fetchAgents();
-      // If we were filtering by this agent, reset filter
-      if (selectedAgentFilter === agentId) {
-        setSelectedAgentFilter('');
-      }
-      // Remove from multi-select filters
-      setAgentFilters(prev => prev.filter(id => id !== agentId));
-      setSuccessMessage('Agent deleted successfully!');
-      setShowSuccessMessage(true);
-    } catch (error) {
-      console.error('Error deleting agent:', error);
-      const message = error.response?.data?.detail || 'Error deleting agent';
-      setErrorMessage(message);
-      setShowErrorMessage(true);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleFocusAgent = (agentId) => {
-    // Set single agent filter and update UI
-    setSelectedAgentFilter(agentId);
-    setAgentFilters([agentId]);
-  };
-
-  const handleToggleAgentFilter = (agentId) => {
-    if (agentId === 'all') {
-      setAgentFilters(['all']);
-      setSelectedAgentFilter('');
-    } else {
-      setAgentFilters(prev => {
-        const newFilters = prev.includes('all') ? [] : [...prev];
-        if (newFilters.includes(agentId)) {
-          return newFilters.filter(id => id !== agentId);
-        } else {
-          return [...newFilters, agentId];
-        }
-      });
-    }
-  };
-
   // Initialize on component mount
   useEffect(() => {
     const initializeApp = async () => {
       // Always fetch existing data
-      await Promise.all([fetchTUnits(), fetchEvents(), fetchAgents(), fetchAnalytics()]);
+      await Promise.all([fetchTUnits(), fetchEvents(), fetchAgents(), fetchAgentsWithStats(), fetchAnalytics()]);
       
       // Auto-generate sample data only if enabled and no data exists
       if (autoGenerateOnLoad) {
@@ -1041,12 +1045,12 @@ function App() {
     };
     
     initializeApp();
-  }, [fetchTUnits, fetchEvents, fetchAgents, fetchAnalytics, autoGenerateOnLoad]);
+  }, [fetchTUnits, fetchEvents, fetchAgents, fetchAgentsWithStats, fetchAnalytics, autoGenerateOnLoad]);
 
-  // Update graph when T-units or agent filters change
+  // Update graph when T-units change
   useEffect(() => {
     convertTUnitsToGraph(tUnits, false); // false = don't preserve positions, recalculate tree
-  }, [tUnits, agentFilters]);
+  }, [tUnits]);
 
   // Update node selection and recalled status without recalculating layout
   useEffect(() => {
@@ -1065,264 +1069,12 @@ function App() {
   const onConnect = useCallback((params) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
 
   return (
-      <div className="h-screen bg-gray-50 flex">
-        {/* Dedicated Agents Panel */}
-        <AnimatePresence>
-          {showAgentsPanel && (
-            <motion.div
-              initial={{ x: -300, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -300, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="w-72 bg-gradient-to-b from-indigo-50 to-purple-50 shadow-xl border-r border-indigo-200 flex flex-col"
-            >
-              {/* Agents Panel Header */}
-              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-bold flex items-center gap-2">
-                    🤖 Cognitive Agents
-                  </h2>
-                  <button
-                    onClick={() => setShowAgentsPanel(false)}
-                    className="text-white hover:text-indigo-200 text-lg"
-                  >
-                    ✕
-                  </button>
-                </div>
-                <p className="text-indigo-100 text-sm mt-1">Manage AI minds & perspectives</p>
-              </div>
-
-              {/* Agents Panel Content */}
-              <div className="flex-1 p-4 overflow-y-auto">
-                {/* Quick Actions */}
-                <div className="mb-4">
-                  <button
-                    onClick={() => setShowAgentCreation(!showAgentCreation)}
-                    className="w-full px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:shadow-lg transition-all flex items-center justify-center gap-2"
-                  >
-                    <span>✨</span>
-                    <span>Create New Agent</span>
-                  </button>
-                </div>
-
-                {/* Agent Filter Chips */}
-                <div className="mb-4">
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">Active Filters</label>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => handleToggleAgentFilter('all')}
-                      className={`px-3 py-1 text-sm rounded-full transition-all ${
-                        agentFilters.includes('all')
-                          ? 'bg-gray-800 text-white shadow-md'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                    >
-                      🌐 All Agents
-                    </button>
-                    {agentsWithStats.map(agent => (
-                      <button
-                        key={agent.id}
-                        onClick={() => handleToggleAgentFilter(agent.id)}
-                        className={`px-3 py-1 text-sm rounded-full transition-all flex items-center gap-2 ${
-                          agentFilters.includes(agent.id)
-                            ? 'text-white shadow-md'
-                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
-                        }`}
-                        style={{
-                          backgroundColor: agentFilters.includes(agent.id) ? agent.color : undefined
-                        }}
-                      >
-                        <span>{agent.avatar}</span>
-                        <span className="font-medium">{agent.name}</span>
-                        <span className="bg-white bg-opacity-30 rounded-full px-2 py-0.5 text-xs">
-                          {agent.thought_count}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Agent Cards */}
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-3 block">
-                    Agent Directory ({agentsWithStats.length})
-                  </label>
-                  <div className="space-y-3">
-                    {agentsWithStats.map(agent => (
-                      <motion.div
-                        key={agent.id}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-lg transition-all group"
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div 
-                              className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-lg"
-                              style={{ backgroundColor: agent.color }}
-                            >
-                              {agent.avatar}
-                            </div>
-                            <div className="flex-1">
-                              {editingAgent === agent.id ? (
-                                <div className="flex items-center gap-2">
-                                  <input
-                                    type="text"
-                                    value={editingAgentName}
-                                    onChange={(e) => setEditingAgentName(e.target.value)}
-                                    className="text-sm font-bold border border-gray-300 rounded px-2 py-1 flex-1"
-                                    onKeyPress={(e) => e.key === 'Enter' && handleSaveAgentEdit(agent.id)}
-                                    autoFocus
-                                  />
-                                  <button
-                                    onClick={() => handleSaveAgentEdit(agent.id)}
-                                    className="text-green-600 hover:text-green-800"
-                                  >
-                                    ✓
-                                  </button>
-                                  <button
-                                    onClick={handleCancelAgentEdit}
-                                    className="text-gray-500 hover:text-gray-700"
-                                  >
-                                    ✕
-                                  </button>
-                                </div>
-                              ) : (
-                                <div>
-                                  <h3 className="font-bold text-gray-800">{agent.name}</h3>
-                                  <p className="text-sm text-gray-600">{agent.description}</p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Agent Stats */}
-                        <div className="grid grid-cols-3 gap-3 mb-3 text-center">
-                          <div className="bg-gray-50 rounded-lg p-2">
-                            <div className="font-bold text-lg text-indigo-600">{agent.thought_count}</div>
-                            <div className="text-xs text-gray-500">Thoughts</div>
-                          </div>
-                          <div className="bg-gray-50 rounded-lg p-2">
-                            <div className="font-bold text-sm text-gray-700">
-                              {new Date(agent.created_at).toLocaleDateString('en', {month: 'short', day: 'numeric'})}
-                            </div>
-                            <div className="text-xs text-gray-500">Created</div>
-                          </div>
-                          <div className="bg-gray-50 rounded-lg p-2">
-                            <div className="font-bold text-sm text-gray-700">
-                              {agent.last_activity ? new Date(agent.last_activity).toLocaleDateString('en', {month: 'short', day: 'numeric'}) : 'Never'}
-                            </div>
-                            <div className="text-xs text-gray-500">Active</div>
-                          </div>
-                        </div>
-
-                        {/* Agent Actions */}
-                        {editingAgent !== agent.id && (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleFocusAgent(agent.id)}
-                              className="flex-1 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm flex items-center justify-center gap-1"
-                            >
-                              <span>🎯</span>
-                              <span>Focus</span>
-                            </button>
-                            <button
-                              onClick={() => handleEditAgent(agent)}
-                              className="px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                            >
-                              ✏️
-                            </button>
-                            <button
-                              onClick={() => handleDeleteAgent(agent.id, agent.name)}
-                              className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                            >
-                              🗑️
-                            </button>
-                          </div>
-                        )}
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Agent Creation Form */}
-                <AnimatePresence>
-                  {showAgentCreation && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mt-4 p-4 bg-white rounded-xl border border-indigo-200"
-                    >
-                      <h4 className="font-medium text-indigo-800 mb-3">Create New Agent</h4>
-                      <div className="space-y-3">
-                        <input
-                          type="text"
-                          placeholder="Agent name (e.g., Analyst, Explorer)"
-                          value={newAgentName}
-                          onChange={(e) => setNewAgentName(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Description (optional)"
-                          value={newAgentDescription}
-                          onChange={(e) => setNewAgentDescription(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            onClick={handleCreateAgent}
-                            disabled={!newAgentName.trim() || isLoading}
-                            className="flex-1 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:opacity-50"
-                          >
-                            {isLoading ? 'Creating...' : 'Create Agent'}
-                          </button>
-                          <button
-                            onClick={() => setShowAgentCreation(false)}
-                            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Agents Panel Toggle Button (when collapsed) */}
-        {!showAgentsPanel && (
-          <button
-            onClick={() => setShowAgentsPanel(true)}
-            className="fixed top-4 left-4 z-40 w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full shadow-xl hover:shadow-2xl transition-all hover:scale-110 flex items-center justify-center"
-            title="Show Agents Panel"
-          >
-            🤖
-          </button>
-        )}
-
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <div className="bg-white shadow-sm border-b border-gray-200 p-4">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                {!showAgentsPanel && (
-                  <button
-                    onClick={() => setShowAgentsPanel(true)}
-                    className="px-3 py-1 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 text-sm"
-                  >
-                    🤖 Agents
-                  </button>
-                )}
-                <h1 className="text-2xl font-bold text-gray-800">🧠 Advanced Cognitive Emergence Protocol</h1>
-              </div>
-              <div className="flex gap-2 items-center">
+    <div className="h-screen bg-gray-50 flex flex-col">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b p-4">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-800">🧠 Advanced Cognitive Emergence Protocol</h1>
+          <div className="flex gap-2 items-center">
             {/* Auto-Generation Toggle */}
             <div className="flex items-center gap-2 mr-4">
               <input
@@ -1586,6 +1338,455 @@ function App() {
       </div>
 
       <div className="flex-1 flex">
+        {/* Dedicated Agents Panel */}
+        <AnimatePresence>
+          {showAgentsPanel && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 320, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold">🤖 Cognitive Agents</h2>
+                <button
+                  onClick={() => setShowAgentsPanel(false)}
+                  className="text-white hover:text-gray-200 text-sm"
+                >
+                  ←
+                </button>
+              </div>
+
+              {/* Agent Filter Chips */}
+              <div className="mb-4">
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => handleToggleAgentFilter('all')}
+                    className={`px-3 py-1 text-sm rounded-full transition-all ${
+                      agentFilters.includes('all')
+                        ? 'bg-white text-indigo-600 shadow-md'
+                        : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30'
+                    }`}
+                  >
+                    🌐 All
+                  </button>
+                  {agentsWithStats.slice(0, 3).map(agent => (
+                    <button
+                      key={agent.id}
+                      onClick={() => handleToggleAgentFilter(agent.id)}
+                      className={`px-3 py-1 text-sm rounded-full transition-all flex items-center gap-2 ${
+                        agentFilters.includes(agent.id)
+                          ? 'bg-white text-indigo-600 shadow-md'
+                          : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30'
+                      }`}
+                    >
+                      <span>{agent.avatar}</span>
+                      <span className="max-w-20 truncate">{agent.name}</span>
+                      <span className="bg-white bg-opacity-30 rounded-full px-2 text-xs">
+                        {agent.thought_count}
+                      </span>
+                    </button>
+                  ))}
+                  {agentsWithStats.length > 3 && (
+                    <span className="text-sm text-white text-opacity-70 px-2 py-1">
+                      +{agentsWithStats.length - 3} more
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Agent List */}
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {agentsWithStats.map(agent => (
+                  <motion.div
+                    key={agent.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white bg-opacity-10 rounded-lg p-3 hover:bg-opacity-20 transition-all"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div 
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0"
+                          style={{ backgroundColor: agent.color }}
+                        >
+                          {agent.avatar}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          {editingAgent === agent.id ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={editingAgentName}
+                                onChange={(e) => setEditingAgentName(e.target.value)}
+                                className="text-sm font-medium bg-white text-gray-800 border border-gray-300 rounded px-2 py-1 w-32"
+                                onKeyPress={(e) => e.key === 'Enter' && handleSaveAgentEdit(agent.id)}
+                                autoFocus
+                              />
+                              <button
+                                onClick={() => handleSaveAgentEdit(agent.id)}
+                                className="text-green-300 hover:text-green-100 text-sm"
+                              >
+                                ✓
+                              </button>
+                              <button
+                                onClick={handleCancelAgentEdit}
+                                className="text-red-300 hover:text-red-100 text-sm"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ) : (
+                            <div>
+                              <div className="font-medium text-white truncate">{agent.name}</div>
+                              <div className="text-xs text-white text-opacity-70 truncate">{agent.description}</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {editingAgent !== agent.id && (
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <button
+                            onClick={() => handleFocusAgent(agent.id)}
+                            className="text-white hover:text-yellow-200 text-sm p-1 rounded hover:bg-white hover:bg-opacity-10"
+                            title="Focus"
+                          >
+                            🎯
+                          </button>
+                          <button
+                            onClick={() => handleEditAgent(agent)}
+                            className="text-white hover:text-blue-200 text-sm p-1 rounded hover:bg-white hover:bg-opacity-10"
+                            title="Rename"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => handleDeleteAgent(agent.id, agent.name)}
+                            className="text-white hover:text-red-200 text-sm p-1 rounded hover:bg-white hover:bg-opacity-10"
+                            title="Delete"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div className="text-center">
+                        <div className="font-semibold text-white">{agent.thought_count}</div>
+                        <div className="text-white text-opacity-70">Thoughts</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-semibold text-white">
+                          {new Date(agent.created_at).toLocaleDateString('en', {month: 'short', day: 'numeric'})}
+                        </div>
+                        <div className="text-white text-opacity-70">Created</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-semibold text-white">
+                          {agent.last_activity ? new Date(agent.last_activity).toLocaleDateString('en', {month: 'short', day: 'numeric'}) : 'Never'}
+                        </div>
+                        <div className="text-white text-opacity-70">Active</div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+              
+              {/* Create Agent Button */}
+              <div className="mt-4">
+                <button
+                  onClick={() => setShowAgentCreation(!showAgentCreation)}
+                  className="w-full px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-all"
+                >
+                  ✨ Create New Agent
+                </button>
+                
+                {/* Agent Creation Form */}
+                <AnimatePresence>
+                  {showAgentCreation && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-3 p-3 bg-white bg-opacity-10 rounded-lg"
+                    >
+                      <input
+                        type="text"
+                        placeholder="Agent name..."
+                        value={newAgentName}
+                        onChange={(e) => setNewAgentName(e.target.value)}
+                        className="w-full px-3 py-2 bg-white text-gray-800 border border-gray-300 rounded mb-2 text-sm"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Agent description..."
+                        value={newAgentDescription}
+                        onChange={(e) => setNewAgentDescription(e.target.value)}
+                        className="w-full px-3 py-2 bg-white text-gray-800 border border-gray-300 rounded mb-3 text-sm"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleCreateAgent}
+                          disabled={isLoading || !newAgentName.trim()}
+                          className="flex-1 px-3 py-2 bg-white text-indigo-600 rounded hover:bg-opacity-90 text-sm font-medium"
+                        >
+                          Create
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowAgentCreation(false);
+                            setNewAgentName('');
+                            setNewAgentDescription('');
+                          }}
+                          className="px-3 py-2 bg-white bg-opacity-20 text-white rounded hover:bg-opacity-30 text-sm"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Toggle Button when collapsed */}
+        {!showAgentsPanel && (
+          <button
+            onClick={() => setShowAgentsPanel(true)}
+            className="w-12 bg-gradient-to-b from-indigo-600 to-purple-600 text-white flex items-center justify-center hover:from-indigo-700 hover:to-purple-700 transition-all"
+            title="Show Agents Panel"
+          >
+            🤖
+          </button>
+        )}
+
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col">
+          {/* Main Canvas */}
+          <div className="flex-1 relative">
+            {activeTab === 'graph' && (
+              <>
+                <ReactFlow
+                  ref={reactFlowInstance}
+                  nodes={nodes}
+                  edges={edges}
+                  onNodesChange={handleNodesChange}
+                  onEdgesChange={onEdgesChange}
+                  onConnect={onConnect}
+                  onNodeClick={onNodeClick}
+                  nodeTypes={nodeTypes}
+                  fitView
+                  attributionPosition="bottom-left"
+                >
+                  <Background />
+                  <Controls />
+                  <MiniMap />
+                </ReactFlow>
+
+                {/* Floating Memory Suggestions Panel */}
+                <AnimatePresence>
+                  {showMemoryPanel && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9, x: 50 }}
+                      animate={{ opacity: 1, scale: 1, x: 0 }}
+                      exit={{ opacity: 0, scale: 0.9, x: 50 }}
+                      className="absolute top-4 right-4 w-96 max-h-[70vh] bg-white rounded-lg shadow-2xl border border-purple-200 z-50 overflow-hidden"
+                      style={{ backdropFilter: 'blur(10px)' }}
+                    >
+                      <div className="bg-gradient-to-r from-purple-500 to-blue-500 text-white p-4">
+                        <div className="flex justify-between items-center">
+                          <h3 className="font-medium">💭 Memory Suggestions</h3>
+                          <div className="flex items-center gap-2">
+                            <label className="flex items-center text-xs">
+                              <input
+                                type="checkbox"
+                                checked={includeCrossAgent}
+                                onChange={(e) => setIncludeCrossAgent(e.target.checked)}
+                                className="mr-1"
+                              />
+                              Cross-Agent
+                            </label>
+                            <button
+                              onClick={() => setShowMemoryPanel(false)}
+                              className="text-white hover:text-purple-100 text-sm font-bold"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="p-4">
+                        {isLoadingMemory ? (
+                          <div className="text-center py-8 text-purple-600">
+                            <div className="animate-spin inline-block w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full mr-2"></div>
+                            Searching memories...
+                          </div>
+                        ) : memorySuggestions.length > 0 ? (
+                          <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
+                            {memorySuggestions.map((suggestion, index) => (
+                              <motion.div 
+                                key={suggestion.id} 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.05 }}
+                                className="p-3 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:border-purple-300 transition-all hover:shadow-md"
+                              >
+                                <div className="flex justify-between items-start mb-2">
+                                  <div className="text-xs text-purple-600 font-medium">
+                                    {suggestion.agent_id !== agents.find(a => a.id === suggestion.agent_id)?.id 
+                                      ? suggestion.agent_id 
+                                      : agents.find(a => a.id === suggestion.agent_id)?.name || suggestion.agent_id}
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full">
+                                      {(suggestion.final_score * 100).toFixed(0)}% match
+                                    </div>
+                                    <button
+                                      onClick={() => handleRecallMemory(suggestion)}
+                                      disabled={selectedNodes.includes(suggestion.id)}
+                                      className="px-3 py-1 bg-purple-500 text-white text-xs rounded-full hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                      {selectedNodes.includes(suggestion.id) ? '✓ Recalled' : 'Recall'}
+                                    </button>
+                                  </div>
+                                </div>
+                                
+                                <div className="text-sm text-gray-700 mb-3 leading-relaxed">
+                                  {suggestion.content.length > 150 
+                                    ? `${suggestion.content.substring(0, 150)}...` 
+                                    : suggestion.content}
+                                </div>
+                                
+                                <div className="flex gap-4 text-xs text-gray-500">
+                                  <span className="flex items-center gap-1">
+                                    🧠 <strong>{(suggestion.similarity * 100).toFixed(0)}%</strong>
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    💙 <strong>{(suggestion.valence_score * 100).toFixed(0)}%</strong>
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    ⏰ {new Date(suggestion.timestamp).toLocaleDateString()}
+                                  </span>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-gray-500 text-sm">
+                            <div className="text-4xl mb-2">🔍</div>
+                            No matching memories found
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* AI Thinking Animation */}
+                <AnimatePresence>
+                  {isThinking && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                      className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-500 to-blue-500 text-white px-6 py-3 rounded-full shadow-2xl z-50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                          className="w-5 h-5"
+                        >
+                          💭
+                        </motion.div>
+                        <span className="font-medium">{thinkingMessage}</span>
+                        <motion.span
+                          animate={{ opacity: [1, 0.3, 1] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                        >
+                          ...
+                        </motion.span>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </>
+            )}
+
+            {activeTab === 'analytics' && (
+              <div className="p-6 space-y-6">
+                <h2 className="text-xl font-bold">Cognitive Analytics</h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-white p-4 rounded-lg shadow">
+                    <h3 className="font-medium mb-4">Average Valence Distribution</h3>
+                    <div className="flex justify-center">
+                      <ValenceRadarChart 
+                        valenceData={tUnits.map(t => t.valence)} 
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-4 rounded-lg shadow">
+                    <h3 className="font-medium mb-4">T-unit Statistics</h3>
+                    <div className="space-y-2">
+                      <div>Total T-units: {tUnits.length}</div>
+                      <div>AI Generated: {tUnits.filter(t => t.ai_generated).length}</div>
+                      <div>Synthesis Events: {events.filter(e => e.type === 'synthesis').length}</div>
+                      <div>Transformation Events: {events.filter(e => e.type === 'transformation').length}</div>
+                      <div>Active Agents: {agents.length}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'timeline' && (
+              <div className="p-6 space-y-6">
+                <h2 className="text-xl font-bold">Cognitive Evolution Timeline</h2>
+                
+                <div className="bg-white p-4 rounded-lg shadow">
+                  <h3 className="font-medium mb-4">Recent Activity</h3>
+                  <CognitiveTimeline events={events} />
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg shadow">
+                  <h3 className="font-medium mb-4">Event History</h3>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {events.map(event => (
+                      <div key={event.id} className="p-3 border rounded">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="font-medium">{event.type}</div>
+                            <div className="text-sm text-gray-600">
+                              Agent: {event.agent_id || 'default'}
+                            </div>
+                            {event.metadata?.phase && (
+                              <div className="text-sm text-blue-600">
+                                Phase: {event.metadata.phase}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {new Date(event.timestamp).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+        
         {/* Control Panel */}
         <div className="w-80 bg-white shadow-lg overflow-y-auto">
           <div className="p-4 space-y-4">
@@ -1839,7 +2040,7 @@ function App() {
                   >
                     <div className="bg-gradient-to-r from-purple-500 to-blue-500 text-white p-4">
                       <div className="flex justify-between items-center">
-                        <h3 className="font-medium">📖 Thought Details & Memory</h3>
+                        <h3 className="font-medium">💭 Memory Suggestions</h3>
                         <div className="flex items-center gap-2">
                           <label className="flex items-center text-xs">
                             <input
@@ -1861,79 +2062,6 @@ function App() {
                     </div>
                     
                     <div className="p-4">
-                      {/* Selected Node Details */}
-                      {selectedNodes.length === 1 && (
-                        <div className="mb-6">
-                          {(() => {
-                            const selectedTUnit = tUnits.find(t => t.id === selectedNodes[0]);
-                            if (!selectedTUnit) return null;
-                            
-                            return (
-                              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border border-blue-200 p-4">
-                                <div className="flex items-start justify-between mb-3">
-                                  <h4 className="font-semibold text-blue-800 flex items-center gap-2">
-                                    📖 Selected Thought Details
-                                  </h4>
-                                  <div className="flex items-center gap-2 text-xs">
-                                    {selectedTUnit.agent_id && (
-                                      <span className="bg-blue-500 text-white px-2 py-1 rounded-full">
-                                        {agents.find(a => a.id === selectedTUnit.agent_id)?.name || selectedTUnit.agent_id}
-                                      </span>
-                                    )}
-                                    {selectedTUnit.ai_generated && (
-                                      <span className="bg-purple-500 text-white px-2 py-1 rounded-full">
-                                        AI
-                                      </span>
-                                    )}
-                                    {selectedTUnit.phase && (
-                                      <span className="bg-orange-500 text-white px-2 py-1 rounded-full">
-                                        {selectedTUnit.phase}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                
-                                <div className="bg-white rounded-lg p-3 mb-3 border border-blue-100">
-                                  <p className="text-gray-800 leading-relaxed text-sm">
-                                    {selectedTUnit.content}
-                                  </p>
-                                </div>
-                                
-                                <div className="grid grid-cols-3 gap-3 text-xs">
-                                  <div className="text-center">
-                                    <div className="text-green-600 font-semibold">🧠 Curiosity</div>
-                                    <div className="text-gray-600">{(selectedTUnit.valence?.curiosity || 0).toFixed(2)}</div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-blue-600 font-semibold">🎯 Certainty</div>
-                                    <div className="text-gray-600">{(selectedTUnit.valence?.certainty || 0).toFixed(2)}</div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-red-600 font-semibold">⚡ Dissonance</div>
-                                    <div className="text-gray-600">{(selectedTUnit.valence?.dissonance || 0).toFixed(2)}</div>
-                                  </div>
-                                </div>
-                                
-                                {selectedTUnit.timestamp && (
-                                  <div className="mt-3 text-xs text-gray-500 text-center">
-                                    Created: {new Date(selectedTUnit.timestamp).toLocaleString()}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      )}
-
-                      {/* Memory Suggestions Section */}
-                      {selectedNodes.length === 1 && (
-                        <div className="border-t border-purple-100 pt-4">
-                          <h4 className="font-medium text-purple-800 mb-3 flex items-center gap-2">
-                            💭 Related Memory Suggestions
-                          </h4>
-                        </div>
-                      )}
-                      
                       {isLoadingMemory ? (
                         <div className="text-center py-8 text-purple-600">
                           <div className="animate-spin inline-block w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full mr-2"></div>
@@ -2096,7 +2224,6 @@ function App() {
             </div>
           )}
         </div>
-      </div>
 
       {/* Custom Reset Confirmation Modal */}
       <AnimatePresence>
@@ -2173,7 +2300,7 @@ function App() {
         )}
       </AnimatePresence>
 
-      {/* Custom Error/Confirmation Message Modal */}
+      {/* Custom Error Message Modal */}
       <AnimatePresence>
         {showErrorMessage && (
           <motion.div
@@ -2190,43 +2317,45 @@ function App() {
             >
               <div className="text-center">
                 <div className="text-4xl mb-4">
-                  {editingAgent?.startsWith('delete-') ? '⚠️' : '❌'}
+                  {window.pendingAgentDelete ? '⚠️' : '❌'}
                 </div>
-                <h2 className="text-xl font-bold mb-4">
-                  <span className={editingAgent?.startsWith('delete-') ? 'text-orange-800' : 'text-red-800'}>
-                    {editingAgent?.startsWith('delete-') ? 'Confirm Delete' : 'Error'}
-                  </span>
+                <h2 className="text-xl font-bold text-red-800 mb-4">
+                  {window.pendingAgentDelete ? 'Confirm Delete' : 'Error'}
                 </h2>
                 <p className="text-gray-700 mb-6 whitespace-pre-line">
                   {errorMessage}
                 </p>
-                
-                {editingAgent?.startsWith('delete-') ? (
-                  <div className="flex gap-3">
+                <div className="flex gap-3">
+                  {window.pendingAgentDelete ? (
+                    <>
+                      <button
+                        onClick={() => {
+                          handleConfirmDeleteAgent();
+                          setShowErrorMessage(false);
+                        }}
+                        className="flex-1 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                      >
+                        Yes, Delete
+                      </button>
+                      <button
+                        onClick={() => {
+                          delete window.pendingAgentDelete;
+                          setShowErrorMessage(false);
+                        }}
+                        className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
                     <button
-                      onClick={() => confirmDeleteAgent(editingAgent.replace('delete-', ''))}
-                      className="flex-1 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                      onClick={() => setShowErrorMessage(false)}
+                      className="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600"
                     >
-                      Yes, Delete
+                      OK
                     </button>
-                    <button
-                      onClick={() => {
-                        setShowErrorMessage(false);
-                        setEditingAgent(null);
-                      }}
-                      className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setShowErrorMessage(false)}
-                    className="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                  >
-                    OK
-                  </button>
-                )}
+                  )}
+                </div>
               </div>
             </motion.div>
           </motion.div>
