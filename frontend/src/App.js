@@ -1337,7 +1337,7 @@ function App() {
         </div>
       </div>
 
-      <div className="flex-1 flex">
+      <div className="flex-1 flex min-h-0">
         {/* Dedicated Agents Panel */}
         <AnimatePresence>
           {showAgentsPanel && (
