@@ -1566,9 +1566,9 @@ function App() {
         )}
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col h-full">
           {/* Main Canvas */}
-          <div className="flex-1 relative">
+          <div className="flex-1 relative h-full">
             {activeTab === 'graph' && (
               <>
                 <ReactFlow
@@ -1582,6 +1582,8 @@ function App() {
                   nodeTypes={nodeTypes}
                   fitView
                   attributionPosition="bottom-left"
+                  style={{ width: '100%', height: '100%' }}
+                >
                 >
                   <Background />
                   <Controls />
