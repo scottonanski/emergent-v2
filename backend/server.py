@@ -1,7 +1,8 @@
 from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import JSONResponse
-from dotenv import load_dotenv
-from starlette.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
@@ -14,6 +15,7 @@ import json
 import asyncio
 import numpy as np
 from openai import OpenAI
+from dotenv import load_dotenv
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -29,6 +31,15 @@ openai_client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 # Create the main app without a prefix
 app = FastAPI()
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],  # React dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
@@ -38,6 +49,23 @@ class Valence(BaseModel):
     curiosity: float = Field(ge=0, le=1, description="Curiosity valence (0-1)")
     certainty: float = Field(ge=0, le=1, description="Certainty valence (0-1)")
     dissonance: float = Field(ge=0, le=1, description="Dissonance valence (0-1)")
+
+class AIReasoningStep(BaseModel):
+    step_number: int = Field(description="Order in reasoning chain")
+    operation: str = Field(description="Type of reasoning operation")
+    input_focus: List[str] = Field(default=[], description="What the AI focused on")
+    reasoning: str = Field(description="AI's internal reasoning")
+    confidence: float = Field(ge=0, le=1, description="AI's confidence in this step")
+    alternatives_considered: List[str] = Field(default=[], description="Other options the AI considered")
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+class AIInsights(BaseModel):
+    reasoning_chain: List[AIReasoningStep] = Field(default=[], description="Step-by-step AI reasoning")
+    overall_confidence: float = Field(ge=0, le=1, description="Overall confidence in result")
+    uncertainty_sources: List[str] = Field(default=[], description="What the AI is uncertain about")
+    attention_weights: Dict[str, float] = Field(default={}, description="What the AI paid attention to")
+    processing_time_ms: int = Field(default=0, description="Time taken to process")
+    model_temperature: float = Field(default=0.7, description="Creativity/randomness setting used")
 
 class TUnit(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -50,6 +78,7 @@ class TUnit(BaseModel):
     phase: Optional[str] = Field(default=None, description="Transformation phase if applicable")
     agent_id: str = Field(default="default", description="Agent that created this T-unit")
     ai_generated: bool = Field(default=False, description="Whether content was AI-generated")
+    ai_insights: Optional[AIInsights] = Field(default=None, description="AI reasoning and processing insights")
     embedding: Optional[List[float]] = Field(default=None, description="OpenAI embedding vector for semantic similarity")
     embedding_model: Optional[str] = Field(default=None, description="Model used for embedding generation")
 
@@ -254,7 +283,7 @@ async def find_memory_suggestions(
 
 # ============== AI INTEGRATION ==============
 
-async def ai_synthesize_content(contents: List[str], valences: List[Valence], recalled_contents: List[str] = None, recalled_valences: List[Valence] = None) -> tuple[str, Valence]:
+async def ai_synthesize_content(contents: List[str], valences: List[Valence], recalled_contents: List[str] = None, recalled_valences: List[Valence] = None) -> tuple[str, Valence, AIInsights]:
     """Use AI to intelligently synthesize content from multiple T-units with memory context"""
     try:
         # Prepare context for AI
@@ -302,29 +331,72 @@ Respond in this exact JSON format:
         "curiosity": 0.X,
         "certainty": 0.X,
         "dissonance": 0.X
-    }}
+    }},
+    "reasoning_chain": [
+        {{
+            "step_number": 1,
+            "operation": "analysis",
+            "input_focus": ["specific elements you focused on"],
+            "reasoning": "Your step-by-step reasoning",
+            "confidence": 0.X,
+            "alternatives_considered": ["other options you considered"]
+        }}
+    ],
+    "overall_confidence": 0.X,
+    "uncertainty_sources": ["what you're uncertain about"],
+    "attention_weights": {{"input1": 0.X, "memory1": 0.X}}
 }}
 
-The valence should reflect the emergent cognitive state, considering both current thoughts and recalled memories."""
+The valence should reflect the emergent cognitive state, considering both current thoughts and recalled memories. Include your complete reasoning process."""
 
+        start_time = datetime.utcnow()
         response = openai_client.chat.completions.create(
             model="gpt-4",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
-            max_tokens=500
+            max_tokens=800
         )
+        processing_time = int((datetime.utcnow() - start_time).total_seconds() * 1000)
         
         result = json.loads(response.choices[0].message.content)
         synthesized_content = result["content"]
         ai_valence = Valence(**result["valence"])
         
-        return synthesized_content, ai_valence
+        # Build AI insights
+        reasoning_steps = [AIReasoningStep(**step) for step in result.get("reasoning_chain", [])]
+        ai_insights = AIInsights(
+            reasoning_chain=reasoning_steps,
+            overall_confidence=result.get("overall_confidence", 0.7),
+            uncertainty_sources=result.get("uncertainty_sources", []),
+            attention_weights=result.get("attention_weights", {}),
+            processing_time_ms=processing_time,
+            model_temperature=0.7
+        )
+        
+        return synthesized_content, ai_valence, ai_insights
     except Exception as e:
         logging.error(f"AI synthesis failed: {e}")
+        import traceback
+        logging.error(f"Full traceback: {traceback.format_exc()}")
         # Fallback to simple synthesis
-        return synthesize_content(contents), average_valence(valences)
+        fallback_insights = AIInsights(
+            reasoning_chain=[AIReasoningStep(
+                step_number=1,
+                operation="fallback",
+                input_focus=["all inputs"],
+                reasoning="AI synthesis failed, using simple concatenation",
+                confidence=0.3,
+                alternatives_considered=[]
+            )],
+            overall_confidence=0.3,
+            uncertainty_sources=["AI processing error"],
+            attention_weights={},
+            processing_time_ms=0,
+            model_temperature=0.0
+        )
+        return synthesize_content(contents), average_valence(valences), fallback_insights
 
-async def ai_transform_content(original_content: str, original_valence: Valence, phase: str, anomaly: str, recalled_contents: List[str] = None, recalled_valences: List[Valence] = None) -> tuple[str, Valence]:
+async def ai_transform_content(original_content: str, original_valence: Valence, phase: str, anomaly: str, recalled_contents: List[str] = None, recalled_valences: List[Valence] = None) -> tuple[str, Valence, AIInsights]:
     """Use AI to intelligently transform content through cognitive phases with memory context"""
     try:
         # Build memory context if present
@@ -374,29 +446,70 @@ Respond in this exact JSON format:
         "curiosity": 0.X,
         "certainty": 0.X,
         "dissonance": 0.X
-    }}
+    }},
+    "reasoning_chain": [
+        {{
+            "step_number": 1,
+            "operation": "phase_analysis",
+            "input_focus": ["original thought", "anomaly trigger"],
+            "reasoning": "Your step-by-step reasoning for this transformation",
+            "confidence": 0.X,
+            "alternatives_considered": ["other transformation approaches you considered"]
+        }}
+    ],
+    "overall_confidence": 0.X,
+    "uncertainty_sources": ["what you're uncertain about in this transformation"],
+    "attention_weights": {{"original_content": 0.X, "anomaly": 0.X, "phase_requirements": 0.X}}
 }}
 
-The content should reflect the cognitive transformation, and valence should show how this phase affects the cognitive state."""
+The content should reflect the cognitive transformation, and valence should show how this phase affects the cognitive state. Include your complete reasoning process."""
 
+        start_time = datetime.utcnow()
         response = openai_client.chat.completions.create(
             model="gpt-4",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.8,
-            max_tokens=400
+            max_tokens=600
         )
+        processing_time = int((datetime.utcnow() - start_time).total_seconds() * 1000)
         
         result = json.loads(response.choices[0].message.content)
         transformed_content = result["content"]
         ai_valence = Valence(**result["valence"])
         
-        return transformed_content, ai_valence
+        # Build AI insights
+        reasoning_steps = [AIReasoningStep(**step) for step in result.get("reasoning_chain", [])]
+        ai_insights = AIInsights(
+            reasoning_chain=reasoning_steps,
+            overall_confidence=result.get("overall_confidence", 0.7),
+            uncertainty_sources=result.get("uncertainty_sources", []),
+            attention_weights=result.get("attention_weights", {}),
+            processing_time_ms=processing_time,
+            model_temperature=0.8
+        )
+        
+        return transformed_content, ai_valence, ai_insights
     except Exception as e:
         logging.error(f"AI transformation failed: {e}")
         # Fallback to simple transformation
+        fallback_insights = AIInsights(
+            reasoning_chain=[AIReasoningStep(
+                step_number=1,
+                operation="fallback",
+                input_focus=["original content"],
+                reasoning="AI transformation failed, using simple phase application",
+                confidence=0.3,
+                alternatives_considered=[]
+            )],
+            overall_confidence=0.3,
+            uncertainty_sources=["AI processing error"],
+            attention_weights={},
+            processing_time_ms=0,
+            model_temperature=0.0
+        )
         simple_content = generate_transformation_content(original_content, phase, anomaly)
         simple_valence = apply_transformation_phase(original_valence, phase)
-        return simple_content, simple_valence
+        return simple_content, simple_valence, fallback_insights
 
 # ============== COGNITIVE ALGORITHMS ==============
 
@@ -509,13 +622,14 @@ async def synthesize_t_units(request: SynthesisRequest):
     recalled_valences = [t.valence for t in recalled_t_units] if recalled_t_units else None
     
     if request.use_ai:
-        synthesized_content, synthesized_valence = await ai_synthesize_content(
+        synthesized_content, synthesized_valence, ai_insights = await ai_synthesize_content(
             contents, valences, recalled_contents, recalled_valences
         )
         ai_generated = True
     else:
         synthesized_content = synthesize_content(contents)
         synthesized_valence = average_valence(valences)
+        ai_insights = None
         ai_generated = False
     
     new_t_unit = TUnit(
@@ -524,7 +638,8 @@ async def synthesize_t_units(request: SynthesisRequest):
         parents=request.t_unit_ids,
         linkage="generative",
         agent_id=t_units[0].agent_id,
-        ai_generated=ai_generated
+        ai_generated=ai_generated,
+        ai_insights=ai_insights
     )
     
     # Generate embedding for the new T-unit
@@ -586,7 +701,7 @@ async def transform_t_unit(request: TransformationRequest):
     
     for phase in phases:
         if request.use_ai:
-            phase_content, phase_valence = await ai_transform_content(
+            phase_content, phase_valence, phase_insights = await ai_transform_content(
                 original_t_unit.content, 
                 original_t_unit.valence, 
                 phase, 
@@ -598,6 +713,7 @@ async def transform_t_unit(request: TransformationRequest):
         else:
             phase_content = generate_transformation_content(original_t_unit.content, phase, request.anomaly)
             phase_valence = apply_transformation_phase(original_t_unit.valence, phase)
+            phase_insights = None
             ai_generated = False
         
         # Create new T-unit for this phase
@@ -608,7 +724,8 @@ async def transform_t_unit(request: TransformationRequest):
             linkage="transformational",
             phase=phase,
             agent_id=original_t_unit.agent_id,
-            ai_generated=ai_generated
+            ai_generated=ai_generated,
+            ai_insights=phase_insights
         )
         
         # Generate embedding for the phase T-unit
@@ -794,6 +911,19 @@ async def multi_agent_exchange(exchange: MultiAgentExchange):
     
     return {"message": "T-unit exchanged successfully", "new_t_unit_id": exchanged_t_unit.id}
 
+@api_router.get("/t-units/{t_unit_id}/insights")
+async def get_t_unit_insights(t_unit_id: str):
+    """Get AI insights for a specific T-unit"""
+    t_unit = await db.t_units.find_one({"id": t_unit_id})
+    if not t_unit:
+        raise HTTPException(status_code=404, detail="T-unit not found")
+    
+    t_unit_obj = TUnit(**t_unit)
+    if t_unit_obj.ai_insights:
+        return t_unit_obj.ai_insights
+    else:
+        return {"message": "No AI insights available for this T-unit"}
+
 @api_router.post("/genesis/import")
 async def import_genesis_log(file: UploadFile = File(...)):
     """Import genesis log data from file"""
@@ -965,8 +1095,8 @@ app.include_router(api_router)
 
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
-    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )

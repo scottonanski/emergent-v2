@@ -155,65 +155,49 @@ CEP-Web transforms abstract cognitive processes into living, interactive visuali
 - **Intuitive UX**: Clean, discoverable interface with helpful defaults
 - **Tree Structure**: Hierarchical layout reveals cognitive lineage clearly
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Simple!)
 
 ### Prerequisites
-- Python 3.11+
-- Node.js 18+
-- MongoDB 4.4+
-- OpenAI API Key
+- Python 3.8+
+- Node.js 16+
+- OpenAI API key
 
-### Installation
-
-1. **Clone the repository**
+### 1. Setup
 ```bash
-git clone https://github.com/yourusername/cep-web.git
-cd cep-web
+# Clone and setup
+git clone <your-repo>
+cd emergent-v2
+python3 -m venv venv
+source venv/bin/activate
+pip install -r backend/requirements.txt
+cd frontend && npm install && cd ..
 ```
 
-2. **Backend Setup**
+### 2. Configure
+Create `backend/.env`:
+```
+MONGO_URL="mongodb://localhost:27017"
+DB_NAME="cep_database"
+OPENAI_API_KEY="your-openai-key-here"
+```
+
+### 3. Start Everything
 ```bash
+# Terminal 1 - Backend
+source venv/bin/activate
 cd backend
-pip install -r requirements.txt
+python3 server.py
 
-# Create .env file
-cat > .env << EOF
-MONGO_URL=mongodb://localhost:27017
-DB_NAME=cep_database
-OPENAI_API_KEY=your_openai_api_key_here
-EOF
-```
-
-3. **Frontend Setup**
-```bash
-cd ../frontend
-yarn install
-
-# Create .env file
-cat > .env << EOF
-REACT_APP_BACKEND_URL=http://localhost:8001
-EOF
-```
-
-4. **Start MongoDB**
-```bash
-# Using Docker
-docker run -d -p 27017:27017 --name mongodb mongo:latest
-
-# Or use local MongoDB installation
-mongod
-```
-
-5. **Run the Application**
-```bash
-# Terminal 1: Backend
-cd backend
-uvicorn server:app --host 0.0.0.0 --port 8001 --reload
-
-# Terminal 2: Frontend
+# Terminal 2 - Frontend  
 cd frontend
-yarn start
+npm start
 ```
+
+### 4. Open & Use
+- Go to http://localhost:3000
+- Click "Create Thought" to add ideas
+- Select 2+ thoughts → "Synthesis" to combine them
+- Click purple AI badges to see reasoning trees
 
 6. **First-Time Setup**
 Navigate to `http://localhost:3000` and:

@@ -7,8 +7,402 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { RadialBarChart, RadialBar, PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import './App.css';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API = BACKEND_URL ? `${BACKEND_URL}/api` : '/api';
+
+// AI Insights Panel Component
+const AIInsightsPanel = ({ insights, onClose }) => {
+  const [position, setPosition] = useState({ x: window.innerWidth - 340, y: 16 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+  if (!insights) return null;
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
+    });
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    setPosition({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  React.useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, dragStart]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      className="fixed w-80 max-h-[80vh] bg-white rounded-lg shadow-2xl border-2 border-purple-200 z-50 overflow-y-auto"
+      style={{
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        cursor: isDragging ? 'grabbing' : 'default'
+      }}
+    >
+      <div 
+        className="bg-gradient-to-r from-purple-500 to-blue-600 text-white p-3 rounded-t-lg flex justify-between items-center cursor-grab active:cursor-grabbing"
+        onMouseDown={handleMouseDown}
+      >
+        <h3 className="font-bold text-sm flex items-center">
+          🧠 AI Reasoning Chain
+        </h3>
+        <button onClick={onClose} className="text-white hover:text-gray-200">
+          ✕
+        </button>
+      </div>
+      
+      <div className="p-4 space-y-3">
+        {/* Overall Confidence */}
+        <div className="bg-gray-50 p-2 rounded">
+          <div className="text-xs font-semibold text-gray-600">Overall Confidence</div>
+          <div className="flex items-center mt-1">
+            <div className="flex-1 bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-green-500 h-2 rounded-full" 
+                style={{ width: `${insights.overall_confidence * 100}%` }}
+              ></div>
+            </div>
+            <span className="ml-2 text-sm font-bold">{(insights.overall_confidence * 100).toFixed(0)}%</span>
+          </div>
+        </div>
+
+        {/* Processing Time */}
+        <div className="text-xs text-gray-500">
+          ⏱️ Processed in {insights.processing_time_ms}ms
+        </div>
+
+        {/* Reasoning Steps */}
+        <div className="space-y-2">
+          <div className="text-sm font-semibold text-gray-700">Reasoning Steps:</div>
+          {insights.reasoning_chain.map((step, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="bg-blue-50 p-2 rounded border-l-4 border-blue-400"
+            >
+              <div className="flex justify-between items-start mb-1">
+                <span className="text-xs font-bold text-blue-600">
+                  Step {step.step_number}: {step.operation}
+                </span>
+                <span className="text-xs bg-blue-100 px-1 rounded">
+                  {(step.confidence * 100).toFixed(0)}%
+                </span>
+              </div>
+              <div className="text-xs text-gray-700 mb-1">{step.reasoning}</div>
+              {step.input_focus.length > 0 && (
+                <div className="text-xs text-purple-600">
+                  🎯 Focused on: {step.input_focus.join(', ')}
+                </div>
+              )}
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Uncertainty Sources */}
+        {insights.uncertainty_sources.length > 0 && (
+          <div className="bg-yellow-50 p-2 rounded">
+            <div className="text-xs font-semibold text-yellow-700">⚠️ Uncertainty Sources:</div>
+            <ul className="text-xs text-yellow-600 mt-1">
+              {insights.uncertainty_sources.map((source, index) => (
+                <li key={index}>• {source}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Attention Weights */}
+        {Object.keys(insights.attention_weights).length > 0 && (
+          <div className="bg-green-50 p-2 rounded">
+            <div className="text-xs font-semibold text-green-700">🎯 Attention Distribution:</div>
+            <div className="mt-1 space-y-1">
+              {Object.entries(insights.attention_weights).map(([key, weight]) => (
+                <div key={key} className="flex items-center">
+                  <span className="text-xs text-green-600 w-20 truncate">{key}:</span>
+                  <div className="flex-1 bg-green-200 rounded-full h-1 mx-2">
+                    <div 
+                      className="bg-green-500 h-1 rounded-full" 
+                      style={{ width: `${weight * 100}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-xs font-bold text-green-700">{(weight * 100).toFixed(0)}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
+// Memory Panel Component
+const MemoryPanel = ({ suggestions, onRecall, onClose, isLoading }) => {
+  const [includeCrossAgent, setIncludeCrossAgent] = useState(false);
+  const [selectedNodes, setSelectedNodes] = useState([]);
+  const [agents, setAgents] = useState([]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9, x: 50 }}
+      animate={{ opacity: 1, scale: 1, x: 0 }}
+      exit={{ opacity: 0, scale: 0.9, x: 50 }}
+      className="absolute top-4 right-4 w-96 max-h-[70vh] bg-white rounded-lg shadow-2xl border border-purple-200 z-50 overflow-hidden"
+      style={{ backdropFilter: 'blur(10px)' }}
+    >
+      <div className="bg-gradient-to-r from-purple-500 to-blue-500 text-white p-4">
+        <div className="flex justify-between items-center">
+          <h3 className="font-medium">💭 Memory Suggestions</h3>
+          <div className="flex items-center gap-2">
+            <label className="flex items-center text-xs">
+              <input
+                type="checkbox"
+                checked={includeCrossAgent}
+                onChange={(e) => setIncludeCrossAgent(e.target.checked)}
+                className="mr-1"
+              />
+              Cross-Agent
+            </label>
+            <button
+              onClick={onClose}
+              className="text-white hover:text-purple-100 text-sm font-bold"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div className="p-4">
+        {isLoading ? (
+          <div className="text-center py-8 text-purple-600">
+            <div className="animate-spin inline-block w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full mr-2"></div>
+            Searching memories...
+          </div>
+        ) : suggestions.length > 0 ? (
+          <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
+            {suggestions.map((suggestion, index) => (
+              <motion.div 
+                key={suggestion.id} 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="p-3 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:border-purple-300 transition-all hover:shadow-md"
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div className="text-xs text-purple-600 font-medium">
+                    {suggestion.agent_id}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full">
+                      {(suggestion.final_score * 100).toFixed(0)}% match
+                    </div>
+                    <button
+                      onClick={() => onRecall(suggestion)}
+                      className="px-3 py-1 bg-purple-500 text-white text-xs rounded-full hover:bg-purple-600 transition-colors"
+                    >
+                      Recall
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="text-sm text-gray-700 mb-3 leading-relaxed">
+                  {suggestion.content.length > 150 
+                    ? `${suggestion.content.substring(0, 150)}...` 
+                    : suggestion.content}
+                </div>
+                
+                <div className="flex gap-4 text-xs text-gray-500">
+                  <span className="flex items-center gap-1">
+                    🧠 <strong>{(suggestion.similarity * 100).toFixed(0)}%</strong>
+                  </span>
+                  <span className="flex items-center gap-1">
+                    💙 <strong>{(suggestion.valence_score * 100).toFixed(0)}%</strong>
+                  </span>
+                  <span className="flex items-center gap-1">
+                    ⏰ {new Date(suggestion.timestamp).toLocaleDateString()}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500 text-sm">
+            <div className="text-4xl mb-2">🔍</div>
+            No matching memories found
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
+// Decision Tree Visualization Component
+const DecisionTreePanel = ({ insights, onClose }) => {
+  const [position, setPosition] = useState({ x: 16, y: 16 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+  if (!insights || !insights.reasoning_chain) return null;
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
+    });
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    setPosition({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  React.useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, dragStart]);
+
+  const renderDecisionNode = (step, index) => {
+    const isHighConfidence = step.confidence > 0.7;
+    const isMediumConfidence = step.confidence > 0.4;
+    
+    return (
+      <motion.div
+        key={index}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: index * 0.2 }}
+        className="relative"
+      >
+        {/* Decision Node */}
+        <div className={`
+          p-4 rounded-lg border-2 min-w-48 text-center
+          ${isHighConfidence ? 'bg-green-50 border-green-300' : 
+            isMediumConfidence ? 'bg-yellow-50 border-yellow-300' : 
+            'bg-red-50 border-red-300'}
+        `}>
+          <div className="font-bold text-sm mb-2">
+            {step.operation.toUpperCase()}
+          </div>
+          <div className="text-xs text-gray-600 mb-2">
+            {step.reasoning}
+          </div>
+          <div className={`
+            text-xs font-bold px-2 py-1 rounded-full
+            ${isHighConfidence ? 'bg-green-200 text-green-800' : 
+              isMediumConfidence ? 'bg-yellow-200 text-yellow-800' : 
+              'bg-red-200 text-red-800'}
+          `}>
+            {(step.confidence * 100).toFixed(0)}% confident
+          </div>
+          
+          {/* Alternatives */}
+          {step.alternatives_considered.length > 0 && (
+            <div className="mt-2 text-xs text-gray-500">
+              <div className="font-semibold">Alternatives:</div>
+              {step.alternatives_considered.slice(0, 2).map((alt, i) => (
+                <div key={i} className="truncate">{alt}</div>
+              ))}
+            </div>
+          )}
+        </div>
+        
+        {/* Connection Line */}
+        {index < insights.reasoning_chain.length - 1 && (
+          <div className="flex justify-center my-2">
+            <div className="w-0.5 h-8 bg-gray-300"></div>
+          </div>
+        )}
+      </motion.div>
+    );
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      className="fixed w-80 max-h-[80vh] bg-white rounded-lg shadow-2xl border-2 border-blue-200 z-50 overflow-y-auto"
+      style={{
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        cursor: isDragging ? 'grabbing' : 'default'
+      }}
+    >
+      <div 
+        className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-t-lg flex justify-between items-center cursor-grab active:cursor-grabbing"
+        onMouseDown={handleMouseDown}
+      >
+        <h3 className="font-bold text-sm flex items-center">
+          🌳 AI Decision Tree
+        </h3>
+        <button onClick={onClose} className="text-white hover:text-gray-200">
+          ✕
+        </button>
+      </div>
+      
+      <div className="p-4">
+        <div className="flex flex-col items-center space-y-2">
+          {insights.reasoning_chain.map((step, index) => renderDecisionNode(step, index))}
+        </div>
+        
+        {/* Overall Result */}
+        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+          <div className="text-sm font-semibold text-gray-700 mb-2">Final Outcome:</div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Overall Confidence</span>
+            <div className="flex items-center">
+              <div className="w-20 bg-gray-200 rounded-full h-2 mr-2">
+                <div 
+                  className="bg-blue-500 h-2 rounded-full" 
+                  style={{ width: `${insights.overall_confidence * 100}%` }}
+                ></div>
+              </div>
+              <span className="text-sm font-bold">{(insights.overall_confidence * 100).toFixed(0)}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 // Enhanced T-unit Node Component
 const TUnitNode = ({ data }) => {
@@ -53,10 +447,24 @@ const TUnitNode = ({ data }) => {
           </div>
         )}
         
-        {/* AI Generated Tab */}
+        {/* AI Generated Tab with Confidence and Clickable Insights */}
         {data.ai_generated && (
-          <div className="bg-purple-500 text-white text-xs px-2 py-1 rounded-t-md">
-            AI
+          <div 
+            className="bg-purple-500 text-white text-xs px-2 py-1 rounded-t-md flex items-center space-x-1 cursor-pointer hover:bg-purple-600 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (data.ai_insights && data.onShowInsights) {
+                data.onShowInsights(data.ai_insights);
+              }
+            }}
+            title="Click to view AI reasoning"
+          >
+            <span>🧠 AI</span>
+            {data.ai_insights && (
+              <span className="bg-purple-700 px-1 rounded text-xs">
+                {(data.ai_insights.overall_confidence * 100).toFixed(0)}%
+              </span>
+            )}
           </div>
         )}
         
@@ -264,6 +672,10 @@ function App() {
   const [showMemoryPanel, setShowMemoryPanel] = useState(false);
   const [includeCrossAgent, setIncludeCrossAgent] = useState(false);
   const [recalledNodes, setRecalledNodes] = useState([]);
+  const [showAIInsights, setShowAIInsights] = useState(false);
+  const [selectedAIInsights, setSelectedAIInsights] = useState(null);
+  const [showDecisionTree, setShowDecisionTree] = useState(false);
+  const [selectedDecisionInsights, setSelectedDecisionInsights] = useState(null);
 
   // Phase 1: Core UX Features State
   const [autoGenerateOnLoad, setAutoGenerateOnLoad] = useState(false);
@@ -646,8 +1058,13 @@ function App() {
         timestamp: node.timestamp,
         agent_id: node.agent_id,
         ai_generated: node.ai_generated,
+        ai_insights: node.ai_insights,
         is_recalled: recalledNodes.includes(node.id),
-        hasManualPosition: node.hasManualPosition
+        hasManualPosition: node.hasManualPosition,
+        onShowInsights: (insights) => {
+          setSelectedDecisionInsights(insights);
+          setShowDecisionTree(true);
+        }
       },
       selected: selectedNodes.includes(node.id)
     }));
@@ -808,6 +1225,12 @@ function App() {
       : [...selectedNodes, node.id];
     
     setSelectedNodes(newSelection);
+    
+    // Show AI insights if clicking on AI-generated node
+    if (node.data.ai_generated && node.data.ai_insights) {
+      setSelectedAIInsights(node.data.ai_insights);
+      setShowAIInsights(true);
+    }
     
     // Trigger memory suggestions if exactly one node is selected
     if (newSelection.length === 1) {
@@ -1686,7 +2109,7 @@ function App() {
                   onNodeClick={onNodeClick}
                   nodeTypes={nodeTypes}
                   fitView
-                  attributionPosition="bottom-left"
+                  proOptions={{ hideAttribution: true }}
                   className="w-full h-full"
                 >
                   <Background />
@@ -1694,103 +2117,41 @@ function App() {
                   <MiniMap />
                 </ReactFlow>
 
-                {/* Floating Memory Suggestions Panel */}
+                {/* Memory Panel */}
                 <AnimatePresence>
-                  {showMemoryPanel && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9, x: 50 }}
-                      animate={{ opacity: 1, scale: 1, x: 0 }}
-                      exit={{ opacity: 0, scale: 0.9, x: 50 }}
-                      className="absolute top-4 right-4 w-96 max-h-[70vh] bg-white rounded-lg shadow-2xl border border-purple-200 z-50 overflow-hidden"
-                      style={{ backdropFilter: 'blur(10px)' }}
-                    >
-                      <div className="bg-gradient-to-r from-purple-500 to-blue-500 text-white p-4">
-                        <div className="flex justify-between items-center">
-                          <h3 className="font-medium">💭 Memory Suggestions</h3>
-                          <div className="flex items-center gap-2">
-                            <label className="flex items-center text-xs">
-                              <input
-                                type="checkbox"
-                                checked={includeCrossAgent}
-                                onChange={(e) => setIncludeCrossAgent(e.target.checked)}
-                                className="mr-1"
-                              />
-                              Cross-Agent
-                            </label>
-                            <button
-                              onClick={() => setShowMemoryPanel(false)}
-                              className="text-white hover:text-purple-100 text-sm font-bold"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="p-4">
-                        {isLoadingMemory ? (
-                          <div className="text-center py-8 text-purple-600">
-                            <div className="animate-spin inline-block w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full mr-2"></div>
-                            Searching memories...
-                          </div>
-                        ) : memorySuggestions.length > 0 ? (
-                          <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
-                            {memorySuggestions.map((suggestion, index) => (
-                              <motion.div 
-                                key={suggestion.id} 
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.05 }}
-                                className="p-3 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:border-purple-300 transition-all hover:shadow-md"
-                              >
-                                <div className="flex justify-between items-start mb-2">
-                                  <div className="text-xs text-purple-600 font-medium">
-                                    {suggestion.agent_id !== agents.find(a => a.id === suggestion.agent_id)?.id 
-                                      ? suggestion.agent_id 
-                                      : agents.find(a => a.id === suggestion.agent_id)?.name || suggestion.agent_id}
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <div className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full">
-                                      {(suggestion.final_score * 100).toFixed(0)}% match
-                                    </div>
-                                    <button
-                                      onClick={() => handleRecallMemory(suggestion)}
-                                      disabled={selectedNodes.includes(suggestion.id)}
-                                      className="px-3 py-1 bg-purple-500 text-white text-xs rounded-full hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                      {selectedNodes.includes(suggestion.id) ? '✓ Recalled' : 'Recall'}
-                                    </button>
-                                  </div>
-                                </div>
-                                
-                                <div className="text-sm text-gray-700 mb-3 leading-relaxed">
-                                  {suggestion.content.length > 150 
-                                    ? `${suggestion.content.substring(0, 150)}...` 
-                                    : suggestion.content}
-                                </div>
-                                
-                                <div className="flex gap-4 text-xs text-gray-500">
-                                  <span className="flex items-center gap-1">
-                                    🧠 <strong>{(suggestion.similarity * 100).toFixed(0)}%</strong>
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    💙 <strong>{(suggestion.valence_score * 100).toFixed(0)}%</strong>
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    ⏰ {new Date(suggestion.timestamp).toLocaleDateString()}
-                                  </span>
-                                </div>
-                              </motion.div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-8 text-gray-500 text-sm">
-                            <div className="text-4xl mb-2">🔍</div>
-                            No matching memories found
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
+                  {showMemoryPanel && memorySuggestions.length > 0 && (
+                    <MemoryPanel 
+                      suggestions={memorySuggestions} 
+                      onRecall={handleRecallMemory}
+                      onClose={() => setShowMemoryPanel(false)}
+                      isLoading={isLoadingMemory}
+                    />
+                  )}
+                </AnimatePresence>
+
+                {/* AI Insights Panel */}
+                <AnimatePresence>
+                  {showAIInsights && selectedAIInsights && (
+                    <AIInsightsPanel 
+                      insights={selectedAIInsights}
+                      onClose={() => {
+                        setShowAIInsights(false);
+                        setSelectedAIInsights(null);
+                      }}
+                    />
+                  )}
+                </AnimatePresence>
+
+                {/* Decision Tree Panel */}
+                <AnimatePresence>
+                  {showDecisionTree && selectedDecisionInsights && (
+                    <DecisionTreePanel 
+                      insights={selectedDecisionInsights}
+                      onClose={() => {
+                        setShowDecisionTree(false);
+                        setSelectedDecisionInsights(null);
+                      }}
+                    />
                   )}
                 </AnimatePresence>
 
