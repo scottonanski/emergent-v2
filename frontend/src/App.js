@@ -1549,6 +1549,111 @@ function App() {
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                {/* Control Panel - moved inside agents panel */}
+                <div className="mt-6 space-y-4">
+                  {/* AI Toggle */}
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={useAI}
+                      onChange={(e) => setUseAI(e.target.checked)}
+                      className="rounded"
+                    />
+                    <label className="text-sm font-medium text-white">Use AI Enhancement</label>
+                  </div>
+
+                  {/* Reset Layout Button */}
+                  <div>
+                    <button
+                      onClick={resetTreeLayout}
+                      className="w-full px-3 py-2 bg-white bg-opacity-20 text-white rounded hover:bg-opacity-30 text-sm"
+                    >
+                      🔄 Reset Tree Layout
+                    </button>
+                  </div>
+
+                  {/* Selected T-units Counter */}
+                  <div className="text-sm font-medium text-white">
+                    Selected T-units: {selectedNodes.length}
+                  </div>
+
+                  {/* Synthesis Button */}
+                  <div>
+                    <button
+                      onClick={handleSynthesis}
+                      disabled={selectedNodes.length < 2 || isThinking}
+                      className="w-full px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                    >
+                      <span>🧠</span>
+                      <span>Synthesis ({selectedNodes.length}/2+ T-units)</span>
+                    </button>
+                  </div>
+
+                  {/* Transform Button */}
+                  <div>
+                    <button
+                      onClick={handleTransform}
+                      disabled={selectedNodes.length !== 1 || isThinking}
+                      className="w-full px-4 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                    >
+                      <span>⚡</span>
+                      <span>Transform (Process Conflicts & Questions)</span>
+                    </button>
+                  </div>
+
+                  {/* Send to Agent Button */}
+                  <div>
+                    <button
+                      onClick={handleSendToAgent}
+                      disabled={selectedNodes.length !== 1}
+                      className="w-full px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                    >
+                      <span>🤝</span>
+                      <span>Send to Agent (1 T-unit)</span>
+                    </button>
+                  </div>
+
+                  {/* Legend */}
+                  <div className="mt-6">
+                    <h3 className="text-sm font-bold text-white mb-3">Legend</h3>
+                    <div className="space-y-2 text-xs text-white">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-red-500 rounded"></div>
+                        <span>High Dissonance</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-green-500 rounded"></div>
+                        <span>High Curiosity</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-yellow-500 rounded"></div>
+                        <span>High Certainty</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-purple-500 rounded"></div>
+                        <span>AI Generated</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-cyan-500 rounded"></div>
+                        <span>Recalled Memory</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Recent Events */}
+                  <div className="mt-6">
+                    <h3 className="text-sm font-bold text-white mb-3">Recent Events</h3>
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {events.slice(-3).map(event => (
+                        <div key={event.id} className="text-xs text-white bg-white bg-opacity-10 p-2 rounded">
+                          <div className="font-medium">{event.type}</div>
+                          <div className="text-gray-200">{event.agent_id}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}
