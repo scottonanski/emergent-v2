@@ -1568,7 +1568,7 @@ function App() {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
           {/* Main Canvas */}
-          <div className="flex-1 relative min-h-0 overflow-hidden">>
+          <div className="flex-1 relative min-h-0 overflow-hidden">
             {activeTab === 'graph' && (
               <>
                 <ReactFlow
