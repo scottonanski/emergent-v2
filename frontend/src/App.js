@@ -1791,16 +1791,6 @@ function App() {
         {/* Control Panel */}
         <div className="w-80 bg-white shadow-lg overflow-y-auto">
           <div className="p-4 space-y-4">
-            {/* AI Toggle */}
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={useAI}
-                onChange={(e) => setUseAI(e.target.checked)}
-                className="rounded"
-              />
-              <label className="text-sm font-medium">Use AI Enhancement</label>
-            </div>
 
             {/* Reset Layout Button */}
             <div>
