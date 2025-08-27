@@ -1605,7 +1605,7 @@ function App() {
                   {/* Send to Agent Button */}
                   <div>
                     <button
-                      onClick={handleSendToAgent}
+                      onClick={handleMultiAgentExchange}
                       disabled={selectedNodes.length !== 1}
                       className="w-full px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                     >
