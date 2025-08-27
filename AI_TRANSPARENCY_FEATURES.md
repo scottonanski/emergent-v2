@@ -2,7 +2,7 @@
 
 ## Overview
 
-I've enhanced your CEP-Web system with comprehensive AI transparency features that allow humans to understand exactly how the AI thinks, reasons, and makes decisions. These improvements transform the black box of AI processing into a transparent, interactive experience.
+the CEP-Web system provides comprehensive AI transparency features that allow humans to understand exactly how the AI thinks, reasons, and makes decisions. These improvements transform the black box of AI processing into a transparent, interactive experience.
 
 ## 🔍 Key Features Implemented
 
