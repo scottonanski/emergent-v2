@@ -300,7 +300,7 @@ function App() {
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
     if (!hasSeenOnboarding) {
-      // setShowTutorial(true); // Temporarily disabled for testing
+      setShowTutorial(true); // Re-enabled tutorial
     }
   }, []);
 
