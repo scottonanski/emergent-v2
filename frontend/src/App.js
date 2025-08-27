@@ -313,15 +313,15 @@ const DecisionTreePanel = ({ insights, onClose }) => {
       >
         {/* Decision Node */}
         <div className={`
-          p-4 rounded-lg border-2 min-w-48 text-center
+          p-3 rounded-lg border-2 w-64 text-center
           ${isHighConfidence ? 'bg-green-50 border-green-300' : 
             isMediumConfidence ? 'bg-yellow-50 border-yellow-300' : 
             'bg-red-50 border-red-300'}
         `}>
-          <div className="font-bold text-sm mb-2">
+          <div className="font-bold text-xs mb-2">
             {step.operation.toUpperCase()}
           </div>
-          <div className="text-xs text-gray-600 mb-2">
+          <div className="text-xs text-gray-600 mb-2 line-clamp-3">
             {step.reasoning}
           </div>
           <div className={`
@@ -337,8 +337,8 @@ const DecisionTreePanel = ({ insights, onClose }) => {
           {step.alternatives_considered.length > 0 && (
             <div className="mt-2 text-xs text-gray-500">
               <div className="font-semibold">Alternatives:</div>
-              {step.alternatives_considered.slice(0, 2).map((alt, i) => (
-                <div key={i} className="truncate">{alt}</div>
+              {step.alternatives_considered.slice(0, 1).map((alt, i) => (
+                <div key={i} className="truncate text-xs">{alt}</div>
               ))}
             </div>
           )}
@@ -378,7 +378,7 @@ const DecisionTreePanel = ({ insights, onClose }) => {
         </button>
       </div>
       
-      <div className="p-4">
+      <div className="p-4 max-h-[calc(80vh-60px)] overflow-y-auto">
         <div className="flex flex-col items-center space-y-2">
           {insights.reasoning_chain.map((step, index) => renderDecisionNode(step, index))}
         </div>
