@@ -1593,7 +1593,7 @@ function App() {
                   {/* Transform Button */}
                   <div>
                     <button
-                      onClick={handleTransform}
+                      onClick={handleTransformation}
                       disabled={selectedNodes.length !== 1 || isThinking}
                       className="w-full px-4 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                     >
